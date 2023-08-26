@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <optional>
 #include <memory>
+#include <iostream>
 #include "gotypes.h"
 
 using PointSet = std::unordered_set<Point,PointHash>;
@@ -45,12 +46,18 @@ class GoString {
   void remove_liberty(const Point &point) {liberties.erase(point);}
   void add_liberty(const Point &point) {liberties.insert(point);}
   GoString* merged_with(GoString &go_string) const {
+    // std::cout << "in merged_with for string with " << go_string.stones.size() << " stones\n";
     assert(go_string.color == color);
+    // std::cout << "combining stones\n";
     PointSet combined_stones(stones);
     combined_stones.insert(go_string.stones.begin(), go_string.stones.end());
+    // std::cout << "combining liberties\n";
     PointSet new_liberties(liberties);
     new_liberties.insert(go_string.liberties.begin(), go_string.liberties.end());
-    new_liberties.erase(combined_stones.begin(), combined_stones.end());
+    // std::cout << "removing stones from liberties\n";
+    for (const auto& stone : combined_stones)
+      new_liberties.erase(stone);
+    // std::cout << "returning new pointer\n";
     return new GoString(color, combined_stones, new_liberties);
   }
   int num_liberties() const { return liberties.size(); }
@@ -62,9 +69,9 @@ class GoString {
 
 class Board {
  private:
-  std::unordered_map<Point, std::shared_ptr<GoString>, PointHash> grid;
  public:
   int num_rows, num_cols;
+  std::unordered_map<Point, std::shared_ptr<GoString>, PointHash> grid;
   Board(int num_rows, int num_cols)
     : num_rows{num_rows}, num_cols{num_cols} {}
 
@@ -74,6 +81,16 @@ class Board {
   }
 
   void place_stone(Player player, const Point& point);
+
+  std::optional<Player> get(Point point) const {
+    auto it = grid.find(point);
+    if (it == grid.end())
+      return std::nullopt;
+    else
+      return std::optional<Player>{it->second->color};
+  }
+
+  void print() const;
 
  private:
   void remove_string(std::shared_ptr<GoString> string);
