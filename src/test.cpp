@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "gotypes.h"
-#include "goboard_slow.h"
+#include "goboard.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
