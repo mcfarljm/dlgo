@@ -24,7 +24,7 @@ class Move {
     assert((point.has_value()) || is_pass || is_resign);
   }
   static Move play(Point point) {
-    return Move(std::optional<Point>{point});
+    return Move(point);
   }
   static Move pass() {
     return Move({}, true);
@@ -36,11 +36,11 @@ class Move {
 
 class GoString {
  private:
-  PointSet liberties;
 
  public:
   Player color;
   PointSet stones;
+  PointSet liberties;
 
   GoString(Player color, PointSet stones, PointSet liberties)
    : color{color}, stones{stones}, liberties{liberties} {}
@@ -107,6 +107,14 @@ class Board {
       return std::optional<Player>{it->second->color};
   }
 
+  std::optional<std::shared_ptr<GoString>> get_go_string(Point point) const {
+    auto it = grid.find(point);
+    if (it == grid.end())
+      return std::nullopt;
+    else
+      return it->second;
+  }
+
   void print() const;
 
  private:
@@ -116,12 +124,12 @@ class Board {
 
 class GameState : public std::enable_shared_from_this<GameState> {
 private:
-  std::shared_ptr<Board> board;
   Player next_player;
   std::shared_ptr<GameState> previous_state;
   std::optional<Move> last_move;
 
 public:
+  std::shared_ptr<Board> board;
   GameState(std::shared_ptr<Board> board, Player next_player, std::shared_ptr<GameState> previous_state, std::optional<Move> last_move)
     : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move} {}
 
@@ -142,6 +150,16 @@ public:
       return false;
     else
       return last_move.value().is_pass && second_last_move.value().is_pass;
+  }
+
+  bool is_move_self_capture(Player player, Move m) const {
+    if (! m.is_play)
+      return false;
+    auto next_board = board->deepcopy();
+    next_board->place_stone(player, m.point.value());
+    auto new_string = next_board->get_go_string(m.point.value());
+    assert(new_string);
+    return new_string.value()->num_liberties() == 0;
   }
     
 };

@@ -102,3 +102,29 @@ TEST_CASE( "Test game state", "[gamestate]" ) {
     REQUIRE( game->is_over() );
   }
 }
+
+
+TEST_CASE( "Self capture", "[selfcapture]" ) {
+  auto game = GameState::new_game(7);
+
+  game = game->apply_move(Move::play(Point(1, 3)));
+  game = game->apply_move(Move::play(Point(1, 2)));
+  game = game->apply_move(Move::play(Point(2, 3)));
+  game = game->apply_move(Move::play(Point(2, 2)));
+  game = game->apply_move(Move::play(Point(3, 3)));
+  game = game->apply_move(Move::play(Point(3, 2)));
+  game = game->apply_move(Move::pass());
+  game = game->apply_move(Move::play(Point(4, 3)));
+  game = game->apply_move(Move::pass());
+  game = game->apply_move(Move::play(Point(3, 4)));
+  game = game->apply_move(Move::pass());
+  game = game->apply_move(Move::play(Point(2, 4)));
+  game = game->apply_move(Move::pass());
+  game = game->apply_move(Move::play(Point(1, 5)));
+  game->board->print();
+
+  // Example for Figure 3.3:
+  auto m = Move::play(Point(1, 4));
+  REQUIRE( game->is_move_self_capture(Player::black, m) );
+  REQUIRE( ! game->is_move_self_capture(Player::white, m) );
+}
