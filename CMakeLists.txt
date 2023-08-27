@@ -13,12 +13,16 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 
-add_library(dlgo src/goboard.cpp src/gotypes.cpp src/agent_helpers.cpp)
+add_library(dlgo src/goboard.cpp src/gotypes.cpp src/agent_helpers.cpp src/agent_naive.h src/myrand.cpp)
 add_executable(tests src/test.cpp)
 target_link_libraries(tests PRIVATE dlgo Catch2::Catch2WithMain)
 
 add_executable(prog src/prog.cpp)
 target_link_libraries(prog PRIVATE dlgo)
+
+
+add_executable(bot_v_bot src/bot_v_bot.cpp)
+target_link_libraries(bot_v_bot PRIVATE dlgo)
 
 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)

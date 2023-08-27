@@ -17,6 +17,10 @@ class Hasher {
     /* Have noticed that constructor seems to be called multiple times
     unexpectedly.  Not sure why, but seems to be OK. */
     /* std::cout << "Setting hash\n"; */
+
+    /* Note: Tried using a globally defined RNG but the executables hung;
+    probably because of initialization order.  Could be reviewed, but for now
+    will just use a separate one for this function. */
     std::default_random_engine engine;
     std::uniform_int_distribution<uint64_t> dist;
 

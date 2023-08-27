@@ -80,14 +80,21 @@ std::string stone_to_char(std::optional<Player> stone) {
 
 
 void Board::print() const {
+  const char COLS[] = "ABCDEFGHJKLMNOPQRST";
   for (auto row = num_rows; row > 0; row--) {
+    auto pad = row <= 9 ? " " : "";
     std::string line;
     for (auto col = 1; col <= num_cols; col++) {
       auto stone = get(Point(row, col));
       line += stone_to_char(stone);
     }
-    std::cout << row << " " << line << std::endl;
+    std::cout << pad << row << " " << line << std::endl;
   }
+  std::cout << "    ";
+  for (auto c=0; c< num_cols; c++) {
+    std::cout << COLS[c] << "  ";
+  }
+  std::cout << std::endl;
 }
 
 

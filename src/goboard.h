@@ -134,13 +134,13 @@ public:
 
 class GameState : public std::enable_shared_from_this<GameState> {
 private:
-  Player next_player;
   std::shared_ptr<GameState> previous_state;
   std::optional<Move> last_move;
   // Todo: review whether this should be a set?
   std::vector<std::pair<Player, uint64_t>> previous_hashes;
 
 public:
+  Player next_player;
   BoardPtr board;
   GameState(BoardPtr board, Player next_player, std::shared_ptr<GameState> previous_state, std::optional<Move> last_move)
     : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move} {
