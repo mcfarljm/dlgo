@@ -31,8 +31,7 @@ void Board::place_stone(Player player, const Point& point) {
   }
 
   PointSet single_point({point});
-  std::shared_ptr<GoString> new_string
-    (new GoString(player, std::move(single_point), liberties));
+  auto new_string = std::make_shared<GoString>(player, std::move(single_point), liberties);
   // Merge new string with adjacent ones:
   // std::cout << "Merging new string with " << adjacent_same_color.size() << " adjacent\n";
   for (const auto &same_color_string : adjacent_same_color) {
@@ -99,4 +98,18 @@ GridMap deepcopy_grid(const GridMap& grid) {
   for (const auto&[point, sptr] : grid)
     new_grid.emplace(point, memo.find(sptr.get())->second);
   return new_grid;
+}
+
+std::shared_ptr<GameState> GameState::apply_move(Move m) {
+  std::cout << "In apply move " << m.is_play << "\n";
+  std::shared_ptr<Board> next_board;
+  if (m.is_play) {
+    next_board = board->deepcopy();
+    next_board->place_stone(next_player, m.point.value());
+  } else {
+    std::cout << "next_board.reset\n";
+    next_board.reset(new Board(*board)); // Shallow copy
+  }
+  std::cout << "returning gamestate\n";
+  return std::make_shared<GameState>(next_board, other_player(next_player), shared_from_this(), m);
 }

@@ -14,11 +14,10 @@ class GoString;
 using GridMap = std::unordered_map<Point, std::shared_ptr<GoString>, PointHash>;
 
 class Move {
- private:
+ public:
+
   std::optional<Point> point;
   bool is_play, is_pass, is_resign;
-
- public:
 
   Move(std::optional<Point> point, bool is_pass = false, bool is_resign = false)
     : point{point}, is_play{point.has_value()}, is_pass{is_pass}, is_resign{is_resign} {
@@ -27,7 +26,7 @@ class Move {
   static Move play(Point point) {
     return Move(std::optional<Point>{point});
   }
-  static Move pass_turn() {
+  static Move pass() {
     return Move({}, true);
   }
   static Move resign() {
@@ -81,9 +80,17 @@ class Board {
   Board(int num_rows, int num_cols)
     : num_rows{num_rows}, num_cols{num_cols} {}
 
-  Board(const Board& b) :
-    num_rows(b.num_rows), num_cols(b.num_cols),
-    grid(deepcopy_grid(b.grid)) {}
+  Board(int num_rows, int num_cols, GridMap grid)
+    : num_rows{num_rows}, num_cols{num_cols}, grid(grid) {}
+
+  std::unique_ptr<Board> deepcopy() {
+    return std::unique_ptr<Board>(new Board(num_rows, num_cols,
+                                            deepcopy_grid(grid)));
+  }
+
+  // Board(const Board& b) :
+  //   num_rows(b.num_rows), num_cols(b.num_cols),
+  //   grid(deepcopy_grid(b.grid)) {}
 
   bool is_on_grid(const Point& point) const {
     return (1 <= point.row <= num_rows) &&
@@ -105,6 +112,38 @@ class Board {
  private:
   void remove_string(std::shared_ptr<GoString> string);
 
+};
+
+class GameState : public std::enable_shared_from_this<GameState> {
+private:
+  std::shared_ptr<Board> board;
+  Player next_player;
+  std::shared_ptr<GameState> previous_state;
+  std::optional<Move> last_move;
+
+public:
+  GameState(std::shared_ptr<Board> board, Player next_player, std::shared_ptr<GameState> previous_state, std::optional<Move> last_move)
+    : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move} {}
+
+  std::shared_ptr<GameState> apply_move(Move m);
+
+  static std::shared_ptr<GameState> new_game(int board_size) {
+    auto board = std::make_shared<Board>(board_size, board_size);
+    return std::make_shared<GameState>(board, Player::black, std::shared_ptr<GameState>(), std::nullopt);
+  }
+
+  bool is_over() const {
+    if (! last_move)
+      return false;
+    else if (last_move.value().is_resign)
+      return true;
+    auto second_last_move = previous_state->last_move;
+    if (! second_last_move)
+      return false;
+    else
+      return last_move.value().is_pass && second_last_move.value().is_pass;
+  }
+    
 };
 
 #endif // GOBOARD_SLOW_H

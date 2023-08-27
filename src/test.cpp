@@ -61,13 +61,35 @@ TEST_CASE( "Test capture liberties", "[liberties]" ) {
   REQUIRE( board.grid.find(Point(4,6))->second->num_liberties() == 6 );
 
   // Test deep copy:
-  auto new_board = board;
-  REQUIRE( new_board.grid.find(Point(4,6))->second->num_liberties() == 6 );
+  auto new_board = board.deepcopy();
+  REQUIRE( new_board->grid.find(Point(4,6))->second->num_liberties() == 6 );
 
-  new_board.place_stone(Player::white, Point(2, 5));
+  new_board->place_stone(Player::white, Point(2, 5));
 
-  REQUIRE( new_board.grid.find(Point(4,6))->second->num_liberties() == 5 );
+  REQUIRE( new_board->grid.find(Point(4,6))->second->num_liberties() == 5 );
   REQUIRE( board.grid.find(Point(4,6))->second->num_liberties() == 6 );
 
   
+}
+
+
+TEST_CASE( "Test game state", "[gamestate]" ) {
+  auto game = GameState::new_game(19);
+  REQUIRE( ! game->is_over() );
+
+  SECTION( "Test resign" ) {
+    game = game->apply_move(Move::resign());
+    REQUIRE( game->is_over() );
+  }
+
+  SECTION( "Test single pass" ) {
+    game = game->apply_move(Move::pass());
+    REQUIRE( ! game->is_over() );
+  }
+
+  SECTION( "Test double pass" ) {
+    game = game->apply_move(Move::pass());
+    game = game->apply_move(Move::pass());
+    REQUIRE( game->is_over() );
+  }
 }
