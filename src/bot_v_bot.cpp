@@ -5,18 +5,9 @@
 
 #include "goboard.h"
 #include "agent_naive.h"
+#include "utils.h"
 
 const auto CLEAR = "\033[2J\033[1;1H";
-
-
-// void print_move(Player player, Move move) {
-//   std::string move_str;
-//   if (move.is_pass)
-//     move_str = "passes";
-//   else if (move.is_resign)
-//     move_str = "resigns";
-//   else
-//     move_str = 
 
 
 int main() {
@@ -32,8 +23,9 @@ int main() {
   while (! game->is_over()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     std::cout << CLEAR;
-    game->board->print();
+    print_board(*game->board);
     auto bot_move = bots[size_t(game->next_player)]->select_move(*game);
+    print_move(game->next_player, bot_move);
     game = game->apply_move(bot_move);
   }
     

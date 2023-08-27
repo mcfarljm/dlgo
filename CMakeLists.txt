@@ -13,7 +13,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 
-add_library(dlgo src/goboard.cpp src/gotypes.cpp src/agent_helpers.cpp src/agent_naive.h src/myrand.cpp)
+add_library(dlgo src/utils.cpp src/goboard.cpp src/gotypes.cpp src/agent_helpers.cpp src/agent_naive.h src/myrand.cpp)
 add_executable(tests src/test.cpp)
 target_link_libraries(tests PRIVATE dlgo Catch2::Catch2WithMain)
 

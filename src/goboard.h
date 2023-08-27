@@ -123,8 +123,6 @@ public:
       return it->second;
   }
 
-  void print() const;
-
   uint64_t get_hash() const { return hash; }
 
  private:
