@@ -13,9 +13,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 
-add_library(dlgo src/goboard_slow.cpp src/gotypes.cpp)
+add_library(dlgo src/goboard.cpp src/gotypes.cpp)
 add_executable(tests src/test.cpp)
 target_link_libraries(tests PRIVATE dlgo Catch2::Catch2WithMain)
+
+add_executable(prog src/prog.cpp)
+target_link_libraries(prog PRIVATE dlgo)
 
 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)

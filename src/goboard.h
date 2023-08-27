@@ -1,5 +1,5 @@
-#ifndef GOBOARD_SLOW_H
-#define GOBOARD_SLOW_H
+#ifndef GOBOARD_H
+#define GOBOARD_H
 
 #include <cassert>
 #include <unordered_set>
@@ -8,13 +8,18 @@
 #include <memory>
 #include <iostream>
 #include <utility> // Pair
+#include <algorithm> // std::find
 #include "gotypes.h"
+#include "hash.h"
 
 using PointSet = std::unordered_set<Point,PointHash>;
 class GoString;
 using GridMap = std::unordered_map<Point, std::shared_ptr<GoString>, PointHash>;
 class Board;
 using BoardPtr = std::shared_ptr<Board>;
+
+// Initialize random hash keys:
+static const Hasher hasher {};
 
 class Move {
  public:
@@ -75,19 +80,20 @@ GridMap deepcopy_grid(const GridMap&);
 
 
 class Board {
- private:
- public:
+private:
+  uint64_t hash;
+public:
   int num_rows, num_cols;
   std::unordered_map<Point, std::shared_ptr<GoString>, PointHash> grid;
 
-  Board(int num_rows, int num_cols)
-    : num_rows{num_rows}, num_cols{num_cols} {}
-
-  Board(int num_rows, int num_cols, GridMap grid)
-    : num_rows{num_rows}, num_cols{num_cols}, grid(grid) {}
+  Board(int num_rows, int num_cols, GridMap grid = {}, uint64_t hash = 0)
+    : num_rows{num_rows}, num_cols{num_cols}, grid(grid), hash(hash) {
+    assert(num_rows <= HASH_MAX_BOARD && num_cols <= HASH_MAX_BOARD);
+    // std::cout << "in board, hash: " << hasher.point_keys[0][0][0] << "\n";
+  }
 
   BoardPtr deepcopy() {
-    return std::make_shared<Board>(num_rows, num_cols, deepcopy_grid(grid));
+    return std::make_shared<Board>(num_rows, num_cols, deepcopy_grid(grid), hash);
   }
 
   // Board(const Board& b) :
@@ -119,6 +125,8 @@ class Board {
 
   void print() const;
 
+  uint64_t get_hash() const { return hash; }
+
  private:
   void remove_string(std::shared_ptr<GoString> string);
 
@@ -129,11 +137,18 @@ private:
   Player next_player;
   std::shared_ptr<GameState> previous_state;
   std::optional<Move> last_move;
+  // Todo: review whether this should be a set?
+  std::vector<std::pair<Player, uint64_t>> previous_hashes;
 
 public:
   BoardPtr board;
   GameState(BoardPtr board, Player next_player, std::shared_ptr<GameState> previous_state, std::optional<Move> last_move)
-    : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move} {}
+    : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move} {
+    if (previous_state) {
+      previous_hashes = previous_state->previous_hashes;
+      previous_hashes.push_back({previous_state->next_player, previous_state->board->get_hash()});
+    }
+  }
 
   std::shared_ptr<GameState> apply_move(Move m);
 
@@ -164,31 +179,19 @@ public:
     return new_string.value()->num_liberties() == 0;
   }
 
-  std::pair<Player, BoardPtr> situation() const {
-    return std::pair<Player, BoardPtr> {next_player, board};
-  }
-
-  // Todo: this doeds not work, believe it has to do with the equality checks.
-  // Comparing pointers is probably not sufficient, believe this would need to
-  // do a deep equality check on the contents.
   bool does_move_violate_ko(Player player, Move m) const {
     if (! m.is_play)
       return false;
     auto next_board = board->deepcopy();
     next_board->place_stone(player, m.point.value());
-    auto next_situation = std::make_pair(other_player(player), next_board);
-    auto past_state = previous_state;
-    std::cout << "Checking past states\n";
-    while (past_state) {
-      std::cout << "Checking state\n";
-      // Todo: This probably is not correct.
-      if (past_state->situation() == next_situation)
-        return true;
-      past_state = past_state->previous_state;
-    }
-    return false;
+    auto next_situation = std::make_pair(other_player(player), next_board->get_hash());
+    // std::cout << "Checking ko, next: " << int(other_player(player)) << " " << next_board->get_hash() << std::endl;
+    // for (const auto& [p, h] : previous_hashes) {
+    //   std::cout << "   prev:  " << int(p) << " " << h << std::endl;
+    // }
+    return std::find(previous_hashes.begin(), previous_hashes.end(), next_situation) != previous_hashes.end();
   }
 
 };
 
-#endif // GOBOARD_SLOW_H
+#endif // GOBOARD_H

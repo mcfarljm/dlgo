@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "gotypes.h"
-#include "goboard_slow.h"
+#include "goboard.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
@@ -142,13 +142,28 @@ TEST_CASE( "Test ko", "[ko]" ) {
   game = game->apply_move(Move::pass());
   game = game->apply_move(Move::play(Point(4, 6)));
 
+  std::cout << "before legal black cap " << game->board->get_hash() << "\n";
+  game->board->print();
+
   // Black captures (legal):
   auto m = Move::play(Point(4, 5));
   REQUIRE( ! game->does_move_violate_ko(Player::black, m) );
   game = game->apply_move(m);
 
+  std::cout << "\nbefore illegal white cap " << game->board->get_hash() << "\n";
+  game->board->print();
+  game->does_move_violate_ko(Player::white, Move::play(Point(4,4)));
+
   // White can't capture back
   REQUIRE( game->does_move_violate_ko(Player::white, Move::play(Point(4, 4))) );
 
-  game->board->print();
+  // See what happens if white captures:
+  // game = game->apply_move(Move::play(Point(4, 4)));
+  // std::cout << "\nafter illegal white cap " << game->board->get_hash() << "\n";
+  // game->board->print();
+  // game->does_move_violate_ko(Player::black, Move::play(Point(1,1)));
+
+  // Make sure other moves work:
+  REQUIRE( ! game->does_move_violate_ko(Player::white, Move::play(Point(2, 4))) );
+
 }
