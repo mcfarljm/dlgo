@@ -20,9 +20,12 @@ target_link_libraries(tests PRIVATE dlgo Catch2::Catch2WithMain)
 add_executable(prog src/prog.cpp)
 target_link_libraries(prog PRIVATE dlgo)
 
-
 add_executable(bot_v_bot src/bot_v_bot.cpp)
 target_link_libraries(bot_v_bot PRIVATE dlgo)
+
+
+add_executable(human_v_bot src/human_v_bot.cpp)
+target_link_libraries(human_v_bot PRIVATE dlgo)
 
 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)

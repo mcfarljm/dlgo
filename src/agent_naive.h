@@ -8,6 +8,7 @@
 
 
 class RandomBot : public Agent {
+public:
   /// Choose a random valid move that preserves our own eyes.
   Move select_move(const GameState& game_state) {
     std::vector<Point> candidates;

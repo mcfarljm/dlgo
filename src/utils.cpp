@@ -1,10 +1,11 @@
 
 #include <iostream>
 #include <string>
+#include <exception>
 #include "utils.h"
 
 
-static const char COLS[] = "ABCDEFGHJKLMNOPQRST";
+static const std::string COLS = "ABCDEFGHJKLMNOPQRST";
 
 
 std::string stone_to_char(std::optional<Player> stone) {
@@ -46,3 +47,13 @@ void print_move(Player player, Move move) {
 }
 
 
+Point point_from_coords(std::string coords) {
+  auto col = COLS.find(std::toupper(coords[0]));
+  std::cout << "col: " << col << " " << std::string::npos;
+  if (col == std::string::npos)
+    throw bad_move_input();
+  col++;
+  coords.erase(0, 1);
+  auto row = std::stoi(coords);
+  return Point(row, col);
+}

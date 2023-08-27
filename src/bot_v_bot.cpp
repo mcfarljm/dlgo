@@ -14,8 +14,6 @@ int main() {
   auto board_size = 9;
   auto game = GameState::new_game(board_size);
 
-  auto x = std::make_unique<RandomBot>();
-
   std::vector<std::unique_ptr<Agent>> bots;
   bots.push_back(std::make_unique<RandomBot>());
   bots.push_back(std::make_unique<RandomBot>());
