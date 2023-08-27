@@ -59,5 +59,15 @@ TEST_CASE( "Test capture liberties", "[liberties]" ) {
 
   REQUIRE( board.grid.find(Point(3,3))->second->num_liberties() == 2 );
   REQUIRE( board.grid.find(Point(4,6))->second->num_liberties() == 6 );
+
+  // Test deep copy:
+  auto new_board = board;
+  REQUIRE( new_board.grid.find(Point(4,6))->second->num_liberties() == 6 );
+
+  new_board.place_stone(Player::white, Point(2, 5));
+
+  REQUIRE( new_board.grid.find(Point(4,6))->second->num_liberties() == 5 );
+  REQUIRE( board.grid.find(Point(4,6))->second->num_liberties() == 6 );
+
   
 }

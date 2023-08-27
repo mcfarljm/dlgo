@@ -10,6 +10,8 @@
 #include "gotypes.h"
 
 using PointSet = std::unordered_set<Point,PointHash>;
+class GoString;
+using GridMap = std::unordered_map<Point, std::shared_ptr<GoString>, PointHash>;
 
 class Move {
  private:
@@ -67,13 +69,21 @@ class GoString {
 };
 
 
+GridMap deepcopy_grid(const GridMap&);
+
+
 class Board {
  private:
  public:
   int num_rows, num_cols;
   std::unordered_map<Point, std::shared_ptr<GoString>, PointHash> grid;
+
   Board(int num_rows, int num_cols)
     : num_rows{num_rows}, num_cols{num_cols} {}
+
+  Board(const Board& b) :
+    num_rows(b.num_rows), num_cols(b.num_cols),
+    grid(deepcopy_grid(b.grid)) {}
 
   bool is_on_grid(const Point& point) const {
     return (1 <= point.row <= num_rows) &&

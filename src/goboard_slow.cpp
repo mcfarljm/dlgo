@@ -84,3 +84,19 @@ void Board::print() const {
     std::cout << row << " " << line << std::endl;
   }
 }
+
+
+GridMap deepcopy_grid(const GridMap& grid) {
+  std::unordered_map<GoString*, std::shared_ptr<GoString>> memo;
+  for (const auto&[point, sptr] : grid) {
+    auto id = sptr.get();
+    if (memo.find(id) == memo.end())
+      // Might investigte the best way to do this:
+      // memo[id] = std::shared_ptr<GoString>(new GoString(*sptr));
+      memo.try_emplace(id, new GoString(*sptr));
+  }
+  GridMap new_grid;
+  for (const auto&[point, sptr] : grid)
+    new_grid.emplace(point, memo.find(sptr.get())->second);
+  return new_grid;
+}
