@@ -40,6 +40,10 @@ void Board::place_stone(Player player, const Point& point) {
   }
   for (const auto &new_string_point : new_string->stones)
     grid[new_string_point] = new_string;
+
+  hash ^= hasher.point_keys[size_t(player)][point.row-1][point.col-1];
+  // std::cout << "  Hash place << " << int(player) << " " << point.row << " " << point.col << " " << hasher.point_keys[size_t(player)][point.row-1][point.col-1] << " " << hash << std::endl;
+
   for (const auto &other_color_string : adjacent_opposite_color)
     other_color_string->remove_liberty(point);
   for (const auto &other_color_string : adjacent_opposite_color)
@@ -58,6 +62,8 @@ void Board::remove_string(std::shared_ptr<GoString> string) {
         neighbor_string_it->second->add_liberty(point);
     }
     grid.erase(point);
+    hash ^= hasher.point_keys[size_t(string->color)][point.row-1][point.col-1];
+    // std::cout << "  Hash remove << " << int(string->color) << " " << point.row << " " << point.col << " " << hasher.point_keys[size_t(string->color)][point.row-1][point.col-1] << " " << hash << std::endl;
   }
 }
 
@@ -101,15 +107,13 @@ GridMap deepcopy_grid(const GridMap& grid) {
 }
 
 std::shared_ptr<GameState> GameState::apply_move(Move m) {
-  std::cout << "In apply move " << m.is_play << "\n";
+  // std::cout << "In apply move " << m.is_play << "\n";
   std::shared_ptr<Board> next_board;
   if (m.is_play) {
     next_board = board->deepcopy();
     next_board->place_stone(next_player, m.point.value());
   } else {
-    std::cout << "next_board.reset\n";
     next_board.reset(new Board(*board)); // Shallow copy
   }
-  std::cout << "returning gamestate\n";
   return std::make_shared<GameState>(next_board, other_player(next_player), shared_from_this(), m);
 }
