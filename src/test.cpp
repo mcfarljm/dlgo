@@ -2,6 +2,7 @@
 
 #include "gotypes.h"
 #include "goboard.h"
+#include "agent_helpers.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
@@ -77,8 +78,6 @@ TEST_CASE( "Test capture liberties", "[liberties]" ) {
 
   REQUIRE( new_board->grid.find(Point(4,6))->second->num_liberties() == 5 );
   REQUIRE( board.grid.find(Point(4,6))->second->num_liberties() == 6 );
-
-  
 }
 
 
@@ -167,3 +166,41 @@ TEST_CASE( "Test ko", "[ko]" ) {
   REQUIRE( ! game->does_move_violate_ko(Player::white, Move::play(Point(2, 4))) );
 
 }
+
+TEST_CASE( "Test eyes", "[eyes]" ) {
+  auto game = GameState::new_game(5);
+
+  game = game->apply_move(Move::play(Point(1, 1)));
+  game = game->apply_move(Move::play(Point(1, 2)));
+  game = game->apply_move(Move::play(Point(2, 1)));
+  game = game->apply_move(Move::play(Point(2, 2)));
+  game = game->apply_move(Move::play(Point(3, 2)));
+  game = game->apply_move(Move::play(Point(2, 3)));
+  game = game->apply_move(Move::play(Point(3, 3)));
+  game = game->apply_move(Move::play(Point(2, 4)));
+  game = game->apply_move(Move::play(Point(3, 4)));
+  game = game->apply_move(Move::play(Point(2, 5)));
+  game = game->apply_move(Move::play(Point(3, 5)));
+
+  // game->board->print();
+
+  // Prior to filling in (1,4), verify that there aren't eyes
+  REQUIRE( ! is_point_an_eye(*game->board, Point(1, 3), Player::white) );
+  REQUIRE( ! is_point_an_eye(*game->board, Point(1, 4), Player::white) );
+  REQUIRE( ! is_point_an_eye(*game->board, Point(1, 5), Player::white) );
+
+  game = game->apply_move(Move::play(Point(1, 4)));
+  game->board->print();
+
+  // Now there are two eyes:
+  REQUIRE( is_point_an_eye(*game->board, Point(1, 3), Player::white) );
+  REQUIRE( ! is_point_an_eye(*game->board, Point(1, 4), Player::white) );
+  REQUIRE( is_point_an_eye(*game->board, Point(1, 5), Player::white) );
+
+  // Make sure they aren't eyes for black:
+  REQUIRE( ! is_point_an_eye(*game->board, Point(1, 3), Player::black) );
+  REQUIRE( ! is_point_an_eye(*game->board, Point(1, 4), Player::black) );
+  REQUIRE( ! is_point_an_eye(*game->board, Point(1, 5), Player::black) );
+
+}
+
