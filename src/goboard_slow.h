@@ -7,11 +7,14 @@
 #include <optional>
 #include <memory>
 #include <iostream>
+#include <utility> // Pair
 #include "gotypes.h"
 
 using PointSet = std::unordered_set<Point,PointHash>;
 class GoString;
 using GridMap = std::unordered_map<Point, std::shared_ptr<GoString>, PointHash>;
+class Board;
+using BoardPtr = std::shared_ptr<Board>;
 
 class Move {
  public:
@@ -83,9 +86,8 @@ class Board {
   Board(int num_rows, int num_cols, GridMap grid)
     : num_rows{num_rows}, num_cols{num_cols}, grid(grid) {}
 
-  std::unique_ptr<Board> deepcopy() {
-    return std::unique_ptr<Board>(new Board(num_rows, num_cols,
-                                            deepcopy_grid(grid)));
+  BoardPtr deepcopy() {
+    return std::make_shared<Board>(num_rows, num_cols, deepcopy_grid(grid));
   }
 
   // Board(const Board& b) :
@@ -129,8 +131,8 @@ private:
   std::optional<Move> last_move;
 
 public:
-  std::shared_ptr<Board> board;
-  GameState(std::shared_ptr<Board> board, Player next_player, std::shared_ptr<GameState> previous_state, std::optional<Move> last_move)
+  BoardPtr board;
+  GameState(BoardPtr board, Player next_player, std::shared_ptr<GameState> previous_state, std::optional<Move> last_move)
     : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move} {}
 
   std::shared_ptr<GameState> apply_move(Move m);
@@ -161,7 +163,32 @@ public:
     assert(new_string);
     return new_string.value()->num_liberties() == 0;
   }
-    
+
+  std::pair<Player, BoardPtr> situation() const {
+    return std::pair<Player, BoardPtr> {next_player, board};
+  }
+
+  // Todo: this doeds not work, believe it has to do with the equality checks.
+  // Comparing pointers is probably not sufficient, believe this would need to
+  // do a deep equality check on the contents.
+  bool does_move_violate_ko(Player player, Move m) const {
+    if (! m.is_play)
+      return false;
+    auto next_board = board->deepcopy();
+    next_board->place_stone(player, m.point.value());
+    auto next_situation = std::make_pair(other_player(player), next_board);
+    auto past_state = previous_state;
+    std::cout << "Checking past states\n";
+    while (past_state) {
+      std::cout << "Checking state\n";
+      // Todo: This probably is not correct.
+      if (past_state->situation() == next_situation)
+        return true;
+      past_state = past_state->previous_state;
+    }
+    return false;
+  }
+
 };
 
 #endif // GOBOARD_SLOW_H

@@ -128,3 +128,27 @@ TEST_CASE( "Self capture", "[selfcapture]" ) {
   REQUIRE( game->is_move_self_capture(Player::black, m) );
   REQUIRE( ! game->is_move_self_capture(Player::white, m) );
 }
+
+
+TEST_CASE( "Test ko", "[ko]" ) {
+  auto game = GameState::new_game(7);
+
+  game = game->apply_move(Move::play(Point(4, 3)));
+  game = game->apply_move(Move::play(Point(4, 4)));
+  game = game->apply_move(Move::play(Point(3, 4)));
+  game = game->apply_move(Move::play(Point(5, 5)));
+  game = game->apply_move(Move::play(Point(5, 4)));
+  game = game->apply_move(Move::play(Point(3, 5)));
+  game = game->apply_move(Move::pass());
+  game = game->apply_move(Move::play(Point(4, 6)));
+
+  // Black captures (legal):
+  auto m = Move::play(Point(4, 5));
+  REQUIRE( ! game->does_move_violate_ko(Player::black, m) );
+  game = game->apply_move(m);
+
+  // White can't capture back
+  REQUIRE( game->does_move_violate_ko(Player::white, Move::play(Point(4, 4))) );
+
+  game->board->print();
+}
