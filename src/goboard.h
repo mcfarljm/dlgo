@@ -192,6 +192,16 @@ public:
     return std::find(previous_hashes.begin(), previous_hashes.end(), next_situation) != previous_hashes.end();
   }
 
+  bool is_valid_move(Move m) const {
+    if (is_over())
+      return false;
+    if (m.is_pass || m.is_resign)
+      return true;
+    return (! board->get(m.point.value())) &&
+      (! is_move_self_capture(next_player, m)) &&
+      (! does_move_violate_ko(next_player, m));
+  }
+
 };
 
 #endif // GOBOARD_H
