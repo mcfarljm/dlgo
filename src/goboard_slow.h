@@ -93,8 +93,8 @@ class Board {
   //   grid(deepcopy_grid(b.grid)) {}
 
   bool is_on_grid(const Point& point) const {
-    return (1 <= point.row <= num_rows) &&
-      (1 <= point.col <= num_cols);
+    return 1 <= point.row && point.row <= num_rows &&
+      1 <= point.col && point.col <= num_cols;
   }
 
   void place_stone(Player player, const Point& point);

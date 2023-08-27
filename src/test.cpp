@@ -22,6 +22,15 @@ TEST_CASE( "Check points", "[points]" ) {
   REQUIRE( x == z );
 }
 
+TEST_CASE( "Check board", "[board]" ) {
+  Board board(5, 5);
+  REQUIRE( board.is_on_grid(Point(2, 2)) );
+  REQUIRE( board.is_on_grid(Point(1, 1)) );
+  REQUIRE( board.is_on_grid(Point(5, 5)) );
+  REQUIRE( ! board.is_on_grid(Point(0, 1)) );
+  REQUIRE( ! board.is_on_grid(Point(1, 0)) );
+}
+
 TEST_CASE( "Test capture liberties", "[liberties]" ) {
   // Example from Figure 3.2
   Board board(6, 7);
