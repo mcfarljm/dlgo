@@ -4,6 +4,7 @@
 #include "goboard.h"
 #include "agent_helpers.h"
 #include "utils.h"
+#include "gtp/command.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
@@ -203,5 +204,20 @@ TEST_CASE( "Test eyes", "[eyes]" ) {
   REQUIRE( ! is_point_an_eye(*game->board, Point(1, 4), Player::black) );
   REQUIRE( ! is_point_an_eye(*game->board, Point(1, 5), Player::black) );
 
+}
+
+
+TEST_CASE( "Test GTP command parsing", "[gtp]" ) {
+  auto command = gtp::parse_command("999 play white D4");
+  REQUIRE( command.sequence.value() == 999 );
+  REQUIRE( command.name == "play" );
+  REQUIRE( command.args[0] == "white" );
+  REQUIRE( command.args[1] == "D4" );
+
+  command = gtp::parse_command("play white D4");
+  REQUIRE( ! command.sequence );
+  REQUIRE( command.name == "play" );
+  REQUIRE( command.args[0] == "white" );
+  REQUIRE( command.args[1] == "D4" );
 }
 
