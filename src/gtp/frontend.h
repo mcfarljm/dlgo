@@ -81,8 +81,8 @@ namespace gtp {
     }
 
     Response handle_boardsize(const ArgList& args) {
-      int new_boardsize = std::stoi(args[0]);
-      game_state = GameState::new_game(new_boardsize);
+      boardsize = std::stoi(args[0]);
+      game_state = GameState::new_game(boardsize);
       return Response::success();
     }
 
