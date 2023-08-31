@@ -2,8 +2,12 @@
 #define UTILS_H
 
 #include <exception>
+#include <algorithm>
+#include <string>
 #include "goboard.h"
 
+
+std::string lowercase(const std::string& s);
 
 void print_board(const Board& b);
 void print_move(Player, Move);
@@ -15,7 +19,6 @@ class bad_move_input : public std::exception {
     return "bad move input";
   }
 };
-
 
 
 #endif // UTILS_H

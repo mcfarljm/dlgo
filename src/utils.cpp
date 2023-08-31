@@ -57,3 +57,11 @@ Point point_from_coords(std::string coords) {
   auto row = std::stoi(coords);
   return Point(row, col);
 }
+
+
+std::string lowercase(const std::string& s) {
+  auto data = s;
+  std::transform(data.begin(), data.end(), data.begin(),
+                 [](unsigned char c){ return std::tolower(c); });
+  return data;
+}
