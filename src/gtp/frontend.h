@@ -29,9 +29,12 @@ namespace gtp {
     std::shared_ptr<GameState> game_state = GameState::new_game(19);
 
     std::unordered_map<std::string, Response (GTPFrontend::*)(const ArgList&)> handlers = {
+      {"name", &GTPFrontend::handle_name},
+      {"version", &GTPFrontend::handle_version},
       {"clear_board", &GTPFrontend::handle_clear_board},
       {"boardsize", &GTPFrontend::handle_boardsize},
       {"known_command", &GTPFrontend::handle_known_command},
+      {"list_commands", &GTPFrontend::handle_list_commands},
       {"showboard", &GTPFrontend::handle_showboard},
       {"play", &GTPFrontend::handle_play},
       {"protocol_version", &GTPFrontend::handle_protocol_version},
@@ -54,7 +57,10 @@ namespace gtp {
       while (! stopped) {
         getline(input, line);
         auto command = parse_command(line);
-        /* std::cout  << "parsed: " << command.name << std::endl; */
+        /* Todo: Sabaki won't show the engine output unless it occurs after the
+        response (it seems).  Probably all that is needed is to modify
+        print_board to return a string.  Then can just call success(str) to get
+        the output.  */
         auto response = process(command);
         output << response.serialize(command);
         output << std::flush;
@@ -75,6 +81,14 @@ namespace gtp {
 
     /* Command handlers: */
 
+    Response handle_name(const ArgList& args) {
+      return Response::success("dlgo");
+    }
+
+    Response handle_version(const ArgList& args) {
+      return Response::success("0.1.0");
+    }
+
     Response handle_clear_board(const ArgList& args) {
       game_state = GameState::new_game(boardsize);
       return Response::success();
@@ -88,6 +102,16 @@ namespace gtp {
 
     Response handle_known_command(const ArgList& args) {
       return Response::bool_response(handlers.find(args[0]) != handlers.end());
+    }
+
+    Response handle_list_commands(const ArgList& args) {
+      std::string commands;
+      for (const auto &[name, ptr] : handlers) {
+        commands += name;
+        commands += "\n";
+      }
+      commands.pop_back();
+      return Response::success(commands);
     }
 
     Response handle_quit(const ArgList& args) {
