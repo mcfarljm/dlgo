@@ -35,9 +35,11 @@ target_link_libraries(prog PRIVATE dlgo)
 add_executable(bot_v_bot src/bot_v_bot.cpp)
 target_link_libraries(bot_v_bot PRIVATE dlgo)
 
-
 add_executable(human_v_bot src/human_v_bot.cpp)
 target_link_libraries(human_v_bot PRIVATE dlgo)
+
+add_executable(dlgobot src/gtp/gtp_main.cpp)
+target_link_libraries(dlgobot PRIVATE dlgo)
 
 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)

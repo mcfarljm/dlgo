@@ -44,11 +44,17 @@ namespace gtp {
 
   public:
 
+  GTPFrontend(std::unique_ptr<Agent> agent) : agent(std::move(agent)) {}
+    /* GTPFrontend(const GTPFrontend&) = delete; */
+    /* GTPFrontend& operator=(const GTPFrontend&) = delete; */
+    /* ~GTPFrontend() = default; */
+
     void run() {
       std::string line;
       while (! stopped) {
         getline(input, line);
         auto command = parse_command(line);
+        /* std::cout  << "parsed: " << command.name << std::endl; */
         auto response = process(command);
         output << response.serialize(command);
         output << std::flush;
