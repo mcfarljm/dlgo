@@ -7,6 +7,7 @@
 #include <deque>
 #include <iterator>
 #include <stdexcept>
+#include <cassert>
 
 
 namespace {
@@ -38,7 +39,7 @@ namespace gtp {
 
   Command parse_command(const std::string& command_string) {
     auto words = split_string(command_string);
-    assert(words.size() > 1);
+    assert(words.size() > 0);
 
     int sequence;
     std::optional<int> sequence_opt;

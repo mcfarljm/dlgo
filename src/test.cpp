@@ -5,6 +5,7 @@
 #include "agent_helpers.h"
 #include "utils.h"
 #include "gtp/command.h"
+#include "gtp/response.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
@@ -219,5 +220,14 @@ TEST_CASE( "Test GTP command parsing", "[gtp]" ) {
   REQUIRE( command.name == "play" );
   REQUIRE( command.args[0] == "white" );
   REQUIRE( command.args[1] == "D4" );
+
+  command = gtp::parse_command("100 clear_board");
+  auto response = gtp::Response::success();
+  REQUIRE( response.serialize(command) == "=100 \n\n" );
+
+  command = gtp::parse_command("clear_board");
+  response = gtp::Response::success();
+  REQUIRE( response.serialize(command) == "= \n\n" );
+
 }
 
