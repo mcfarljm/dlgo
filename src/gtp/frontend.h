@@ -32,9 +32,9 @@ namespace gtp {
       {"clear_board", &GTPFrontend::handle_clear_board},
       {"boardsize", &GTPFrontend::handle_boardsize},
       {"known_command", &GTPFrontend::handle_known_command},
-      {"showbard", &GTPFrontend::handle_showboard},
+      {"showboard", &GTPFrontend::handle_showboard},
       {"play", &GTPFrontend::handle_play},
-      {"protocol_versoin", &GTPFrontend::handle_protocol_version},
+      {"protocol_version", &GTPFrontend::handle_protocol_version},
       {"genmove", &GTPFrontend::handle_genmove},
       {"komi", &GTPFrontend::ignore},
       {"time_settings", &GTPFrontend::ignore},
@@ -110,6 +110,7 @@ namespace gtp {
 
     Response handle_genmove(const ArgList& args) {
       auto move = agent->select_move(*game_state);
+      game_state = game_state->apply_move(move);
       if (move.is_pass)
         return Response::success("pass");
       else if (move.is_resign)
@@ -127,7 +128,7 @@ namespace gtp {
     }
 
     Response handle_unknown(const ArgList& args) {
-      return Response::error("Urecognized command");
+      return Response::error("Unrecognized command");
     }
     
   };
