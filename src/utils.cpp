@@ -5,7 +5,7 @@
 #include "utils.h"
 
 
-static const std::string COLS = "ABCDEFGHJKLMNOPQRST";
+static constexpr std::string_view COLS = "ABCDEFGHJKLMNOPQRST";
 
 
 void print_move(Player player, Move move) {

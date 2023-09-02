@@ -3,7 +3,7 @@
 #include "gtp_board.h"
 
 namespace {
-  static const std::string COLS = "ABCDEFGHJKLMNOPQRST";
+  static constexpr std::string_view COLS = "ABCDEFGHJKLMNOPQRST";
 }
 
 std::string coords_to_gtp_position(Move m) {

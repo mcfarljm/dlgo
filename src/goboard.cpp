@@ -3,7 +3,7 @@
 #include <string>
 
 
-static const std::string COLS = "ABCDEFGHJKLMNOPQRST";
+static constexpr char COLS[] = "ABCDEFGHJKLMNOPQRST";
 
 
 static std::string stone_to_char(std::optional<Player> stone) {
