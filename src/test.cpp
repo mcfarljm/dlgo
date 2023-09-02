@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/benchmark/catch_benchmark.hpp>
 
 #include "gotypes.h"
 #include "goboard.h"
@@ -7,6 +8,8 @@
 #include "gtp/command.h"
 #include "gtp/response.h"
 #include "scoring.h"
+#include "eval.h"
+#include "alphabeta.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
@@ -265,4 +268,15 @@ TEST_CASE( "Test scoring", "[scoring]" ) {
   REQUIRE(9 == territory.num_white_stones);
   REQUIRE(3 == territory.num_white_territory);
   REQUIRE(0 == territory.num_dame);
+}
+
+
+TEST_CASE( "Benchmark alpha beta", "[!benchmark]" ) {
+
+  const int MIN_SCORE = -999999;
+  auto game = GameState::new_game(9);
+  BENCHMARK("alpha beta depth 2") {
+   return alpha_beta_result(*game, 2, MIN_SCORE, MIN_SCORE, &capture_diff);
+  };
+
 }

@@ -15,4 +15,10 @@ public:
 
 };
 
+
+// Public for testing
+int alpha_beta_result(const GameState& game_state,
+                      int max_depth, int best_black, int best_white,
+                      int (*eval_fn)(const GameState&));
+
 #endif // ALPHA_BETA_H
