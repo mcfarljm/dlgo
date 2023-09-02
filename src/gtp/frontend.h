@@ -21,7 +21,7 @@ namespace gtp {
   
   class GTPFrontend {
   private:
-    bool stopped;
+    bool stopped = false;
     int boardsize = 19;
     std::unique_ptr<Agent> agent;
 
