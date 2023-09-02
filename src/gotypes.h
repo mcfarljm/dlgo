@@ -1,7 +1,8 @@
 #ifndef GOTYPES_H
 #define GOTYPES_H
 
-#include <vector>
+#include <array>
+#include <iostream>
 
 enum class Player { black, white };
 
@@ -10,7 +11,7 @@ Player other_player(Player &player);
 struct Point {
   int row, col;
   Point(int r, int c) : row{r}, col{c} {}
-  std::vector<Point> neighbors() const;
+  std::array<Point, 4> neighbors() const;
   bool operator==(const Point& rhs) const {
     return row == rhs.row && col == rhs.col;
   }

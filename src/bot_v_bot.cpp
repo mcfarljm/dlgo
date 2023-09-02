@@ -2,6 +2,7 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#include <array>
 
 #include "goboard.h"
 #include "agent_naive.h"
@@ -14,9 +15,10 @@ int main() {
   auto board_size = 9;
   auto game = GameState::new_game(board_size);
 
-  std::vector<std::unique_ptr<Agent>> bots;
-  bots.push_back(std::make_unique<RandomBot>());
-  bots.push_back(std::make_unique<RandomBot>());
+  std::array<std::unique_ptr<Agent>, 2> bots = {
+    std::make_unique<RandomBot>(),
+    std::make_unique<RandomBot>(),
+  };
 
   while (! game->is_over()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(300));

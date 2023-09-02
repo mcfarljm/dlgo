@@ -18,7 +18,7 @@ bool is_point_an_eye(const Board& board, Point point, Player color) {
   // board.  On the edge, must control all corners.
   int friendly_corners = 0;
   int off_board_corners = 0;
-  const std::vector<Point> corners {
+  const Point corners[] =  {
     Point(point.row - 1, point.col - 1),
     Point(point.row - 1, point.col + 1),
     Point(point.row + 1, point.col - 1),
