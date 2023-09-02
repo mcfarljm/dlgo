@@ -22,6 +22,7 @@ add_library(dlgo
   src/myrand.cpp
 
   src/scoring.cpp
+  src/alphabeta.cpp
 
   src/gtp/command.h
   src/gtp/response.h

@@ -24,7 +24,7 @@ public:
 
   Territory(std::unordered_map<Point, TerritoryStatus, PointHash> territory_map);
 
-  static Territory evaluate_territory(BoardPtr board);
+  static Territory evaluate_territory(ConstBoardPtr board);
   
 private:
   PointSet dame_points;
@@ -39,8 +39,8 @@ struct GameResult {
   GameResult(int black, int white, float komi=7.5) :
     black(black), white(white), komi(komi) {}
 
-  GameResult(GameStatePtr game_state, float komi=7.5) : komi(komi) {
-    auto territory = Territory::evaluate_territory(game_state->board);
+  GameResult(ConstBoardPtr board, float komi=7.5) : komi(komi) {
+    auto territory = Territory::evaluate_territory(board);
     black = territory.num_black_territory + territory.num_black_stones;
     white = territory.num_white_territory + territory.num_white_stones;
   }

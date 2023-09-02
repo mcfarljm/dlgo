@@ -6,7 +6,7 @@
 
 enum class Player { black, white };
 
-Player other_player(Player &player);
+Player other_player(Player player);
 
 struct Point {
   int row, col;

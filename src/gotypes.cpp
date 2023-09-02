@@ -1,6 +1,6 @@
 #include "gotypes.h"
 
-Player other_player(Player &player) {
+Player other_player(Player player) {
   return Player(1 - (int) player);
 }
 

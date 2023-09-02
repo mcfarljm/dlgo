@@ -17,8 +17,10 @@ class GoString;
 using GridMap = std::unordered_map<Point, std::shared_ptr<GoString>, PointHash>;
 class Board;
 using BoardPtr = std::shared_ptr<Board>;
+using ConstBoardPtr = std::shared_ptr<const Board>;
 class GameState;
 using GameStatePtr = std::shared_ptr<GameState>;
+using ConstGameStatePtr = std::shared_ptr<const GameState>;
 
 // Initialize random hash keys:
 static const Hasher hasher {};
@@ -122,7 +124,7 @@ public:
 
 class GameState : public std::enable_shared_from_this<GameState> {
 private:
-  GameStatePtr previous_state;
+  ConstGameStatePtr previous_state;
   std::optional<Move> last_move;
   // Todo: review whether this should be a set?
   std::vector<std::pair<Player, uint64_t>> previous_hashes;
@@ -130,7 +132,7 @@ private:
 public:
   Player next_player;
   BoardPtr board;
-  GameState(BoardPtr board, Player next_player, GameStatePtr previous_state, std::optional<Move> last_move)
+  GameState(BoardPtr board, Player next_player, ConstGameStatePtr previous_state, std::optional<Move> last_move)
     : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move} {
     if (previous_state) {
       previous_hashes = previous_state->previous_hashes;
@@ -138,7 +140,7 @@ public:
     }
   }
 
-  GameStatePtr apply_move(Move m);
+  GameStatePtr apply_move(Move m) const;
 
   static GameStatePtr new_game(int board_size) {
     auto board = std::make_shared<Board>(board_size, board_size);
@@ -147,11 +149,15 @@ public:
 
   bool is_over() const;
 
+  std::optional<Player> winner() const;
+
   bool is_move_self_capture(Player player, Move m) const;
 
   bool does_move_violate_ko(Player player, Move m) const;
 
   bool is_valid_move(Move m) const;
+
+  std::vector<Move> legal_moves() const;
 
 };
 

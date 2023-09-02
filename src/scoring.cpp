@@ -17,7 +17,7 @@ public:
   // Find the contiguous section of a board containing a point. Also identify
   // all the boundary points.
   std::pair<PointSet, std::unordered_set<std::optional<Player>>>
-  collect_region(Point start_pos, BoardPtr board) {
+  collect_region(Point start_pos, ConstBoardPtr board) {
     if (visited_points.find(start_pos) != visited_points.end())
       return std::make_pair<PointSet, std::unordered_set<std::optional<Player>>>({},{});
 
@@ -74,7 +74,7 @@ Territory::Territory(std::unordered_map<Point, TerritoryStatus, PointHash> terri
 }
 
 
-Territory Territory::evaluate_territory(BoardPtr board) {
+Territory Territory::evaluate_territory(ConstBoardPtr board) {
   std::unordered_map<Point, TerritoryStatus, PointHash> territory_map;
   for (int r=1; r <= board->num_rows; ++r) {
     for (int c=1; c <= board->num_cols; ++c) {

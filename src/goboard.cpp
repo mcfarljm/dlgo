@@ -1,6 +1,7 @@
-#include "goboard.h"
 #include <iostream>
 #include <string>
+#include "goboard.h"
+#include "scoring.h"
 
 
 static constexpr char COLS[] = "ABCDEFGHJKLMNOPQRST";
@@ -131,7 +132,7 @@ GridMap deepcopy_grid(const GridMap& grid) {
   return new_grid;
 }
 
-GameStatePtr GameState::apply_move(Move m) {
+GameStatePtr GameState::apply_move(Move m) const {
   // std::cout << "In apply move " << m.is_play << "\n";
   BoardPtr next_board;
   if (m.is_play) {
@@ -154,6 +155,15 @@ bool GameState::is_over() const {
     return false;
   else
     return last_move.value().is_pass && second_last_move.value().is_pass;
+}
+
+std::optional<Player> GameState::winner() const {
+  if (! is_over())
+    return std::nullopt;
+  if (last_move && last_move.value().is_resign)
+    return next_player;
+  auto game_result = GameResult(board);
+  return game_result.winner();
 }
 
 bool GameState::is_move_self_capture(Player player, Move m) const {
@@ -187,4 +197,20 @@ bool GameState::is_valid_move(Move m) const {
   return (! board->get(m.point.value())) &&
     (! is_move_self_capture(next_player, m)) &&
     (! does_move_violate_ko(next_player, m));
+}
+
+
+std::vector<Move> GameState::legal_moves() const {
+  std::vector<Move> moves;
+  for (auto r=1; r <= board->num_rows; r++) {
+    for (auto c=1; c <= board->num_cols; c++) {
+      auto move = Move::play(Point(r, c));
+      if (is_valid_move(move))
+        moves.push_back(move);
+    }
+  }
+  // These two moves are always legal:
+  moves.push_back(Move::pass());
+  moves.push_back(Move::resign());
+  return moves;
 }
