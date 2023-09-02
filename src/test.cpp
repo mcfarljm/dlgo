@@ -3,7 +3,7 @@
 #include "gotypes.h"
 #include "goboard.h"
 #include "agent_helpers.h"
-#include "utils.h"
+// #include "utils.h"
 #include "gtp/command.h"
 #include "gtp/response.h"
 #include "scoring.h"
@@ -55,7 +55,7 @@ TEST_CASE( "Test capture liberties", "[liberties]" ) {
   board.place_stone(Player::black, Point(4, 6));
   REQUIRE( board.grid.size() == 12);
 
-  print_board(board);
+  std::cout << board;
 
   REQUIRE( board.grid.find(Point(3,2))->second->color == Player::white );
   REQUIRE( board.grid.find(Point(3,2))->second->stones.size() == 2 );
@@ -69,7 +69,7 @@ TEST_CASE( "Test capture liberties", "[liberties]" ) {
   // Black places stone to capture:
   board.place_stone(Player::black, Point(2, 4));
 
-  print_board(board);
+  std::cout << board;
 
   REQUIRE( board.grid.find(Point(3,3))->second->num_liberties() == 2 );
   REQUIRE( board.grid.find(Point(4,6))->second->num_liberties() == 6 );
@@ -124,7 +124,7 @@ TEST_CASE( "Self capture", "[selfcapture]" ) {
   game = game->apply_move(Move::play(Point(2, 4)));
   game = game->apply_move(Move::pass());
   game = game->apply_move(Move::play(Point(1, 5)));
-  print_board(*game->board);
+  std::cout << *game->board;
 
   // Example for Figure 3.3:
   auto m = Move::play(Point(1, 4));
@@ -146,7 +146,7 @@ TEST_CASE( "Test ko", "[ko]" ) {
   game = game->apply_move(Move::play(Point(4, 6)));
 
   std::cout << "before legal black cap " << game->board->get_hash() << "\n";
-  print_board(*game->board);
+  std::cout << *game->board;
 
   // Black captures (legal):
   auto m = Move::play(Point(4, 5));
@@ -154,7 +154,7 @@ TEST_CASE( "Test ko", "[ko]" ) {
   game = game->apply_move(m);
 
   std::cout << "\nbefore illegal white cap " << game->board->get_hash() << "\n";
-  print_board(*game->board);
+  std::cout << *game->board;
   game->does_move_violate_ko(Player::white, Move::play(Point(4,4)));
 
   // White can't capture back
@@ -163,7 +163,7 @@ TEST_CASE( "Test ko", "[ko]" ) {
   // See what happens if white captures:
   // game = game->apply_move(Move::play(Point(4, 4)));
   // std::cout << "\nafter illegal white cap " << game->board->get_hash() << "\n";
-  // print_board(*game->board);
+  // std::cout << board;
   // game->does_move_violate_ko(Player::black, Move::play(Point(1,1)));
 
   // Make sure other moves work:
@@ -186,7 +186,7 @@ TEST_CASE( "Test eyes", "[eyes]" ) {
   game = game->apply_move(Move::play(Point(2, 5)));
   game = game->apply_move(Move::play(Point(3, 5)));
 
-  // print_board(*game->board);
+  // std::cout << board;
 
   // Prior to filling in (1,4), verify that there aren't eyes
   REQUIRE( ! is_point_an_eye(*game->board, Point(1, 3), Player::white) );
@@ -194,7 +194,7 @@ TEST_CASE( "Test eyes", "[eyes]" ) {
   REQUIRE( ! is_point_an_eye(*game->board, Point(1, 5), Player::white) );
 
   game = game->apply_move(Move::play(Point(1, 4)));
-  print_board(*game->board);
+  std::cout << *game->board;
 
   // Now there are two eyes:
   REQUIRE( is_point_an_eye(*game->board, Point(1, 3), Player::white) );

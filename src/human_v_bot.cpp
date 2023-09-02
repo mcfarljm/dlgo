@@ -18,7 +18,7 @@ int main() {
   Move move = Move::pass();
 
   std::cout << CLEAR;
-  print_board(*game->board);
+  std::cout << *game->board;
 
   while (! game->is_over()) {
     if (game->next_player == Player::black) {
@@ -34,7 +34,7 @@ int main() {
     std::cout << CLEAR;
     print_move(game->next_player, move);
     game = game->apply_move(move);
-    print_board(*game->board);
+    std::cout << *game->board;
   }
     
 }

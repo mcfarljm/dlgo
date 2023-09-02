@@ -21,7 +21,7 @@ int main() {
   while (! game->is_over()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     std::cout << CLEAR;
-    print_board(*game->board);
+    std::cout << *game->board;
     auto bot_move = bots[size_t(game->next_player)]->select_move(*game);
     print_move(game->next_player, bot_move);
     game = game->apply_move(bot_move);

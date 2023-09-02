@@ -5,6 +5,7 @@
 #include <memory>
 #include <unordered_map>
 #include <deque>
+#include <sstream>
 
 #include "../goboard.h"
 #include "../utils.h"
@@ -57,10 +58,6 @@ namespace gtp {
       while (! stopped) {
         getline(input, line);
         auto command = parse_command(line);
-        /* Todo: Sabaki won't show the engine output unless it occurs after the
-        response (it seems).  Probably all that is needed is to modify
-        print_board to return a string.  Then can just call success(str) to get
-        the output.  */
         auto response = process(command);
         output << response.serialize(command);
         output << std::flush;
@@ -120,8 +117,11 @@ namespace gtp {
     }
 
     Response handle_showboard(const ArgList& args) {
-      print_board(*game_state->board);
-      return Response::success();
+      /* output << *game_state->board; */
+      std::stringstream ss;
+      ss << "Board:\n";
+      ss << *game_state->board;
+      return Response::success(ss.str());
     }
 
     Response handle_play(const ArgList& args) {

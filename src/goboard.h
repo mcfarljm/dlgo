@@ -80,6 +80,8 @@ public:
     // std::cout << "in board, hash: " << hasher.point_keys[0][0][0] << "\n";
   }
 
+  friend std::ostream& operator<<(std::ostream&, const Board& b);
+
   BoardPtr deepcopy() {
     return std::make_shared<Board>(num_rows, num_cols, deepcopy_grid(grid), hash);
   }

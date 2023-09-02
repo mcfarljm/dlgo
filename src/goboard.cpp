@@ -3,6 +3,19 @@
 #include <string>
 
 
+static const std::string COLS = "ABCDEFGHJKLMNOPQRST";
+
+
+static std::string stone_to_char(std::optional<Player> stone) {
+  if (! stone)
+    return " . ";
+  else if (stone.value() == Player::white)
+    return " o ";
+  else
+    return " x ";
+}
+
+
 GoString* GoString::merged_with(GoString &go_string) const {
   // std::cout << "in merged_with for string with " << go_string.stones.size() << " stones\n";
   assert(go_string.color == color);
@@ -17,6 +30,25 @@ GoString* GoString::merged_with(GoString &go_string) const {
     new_liberties.erase(stone);
   // std::cout << "returning new pointer\n";
   return new GoString(color, combined_stones, new_liberties);
+}
+
+
+std::ostream& operator<<(std::ostream& os, const Board& b) {
+  for (auto row = b.num_rows; row > 0; row--) {
+    auto pad = row <= 9 ? " " : "";
+    std::string line;
+    for (auto col = 1; col <= b.num_cols; col++) {
+      auto stone = b.get(Point(row, col));
+      line += stone_to_char(stone);
+    }
+    os << pad << row << " " << line << std::endl;
+  }
+  os << "    ";
+  for (auto c=0; c< b.num_cols; c++) {
+    os << COLS[c] << "  ";
+  }
+  os << std::endl;
+  return os;
 }
 
 void Board::place_stone(Player player, const Point& point) {

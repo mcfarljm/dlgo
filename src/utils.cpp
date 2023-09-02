@@ -8,33 +8,6 @@
 static const std::string COLS = "ABCDEFGHJKLMNOPQRST";
 
 
-std::string stone_to_char(std::optional<Player> stone) {
-  if (! stone)
-    return " . ";
-  else if (stone.value() == Player::white)
-    return " o ";
-  else
-    return " x ";
-}
-    
-
-void print_board(const Board& b) {
-  for (auto row = b.num_rows; row > 0; row--) {
-    auto pad = row <= 9 ? " " : "";
-    std::string line;
-    for (auto col = 1; col <= b.num_cols; col++) {
-      auto stone = b.get(Point(row, col));
-      line += stone_to_char(stone);
-    }
-    std::cout << pad << row << " " << line << std::endl;
-  }
-  std::cout << "    ";
-  for (auto c=0; c< b.num_cols; c++) {
-    std::cout << COLS[c] << "  ";
-  }
-  std::cout << std::endl;
-}
-
 void print_move(Player player, Move move) {
   std::string move_str;
   if (move.is_pass)
