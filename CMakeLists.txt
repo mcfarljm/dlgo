@@ -21,6 +21,7 @@ add_library(dlgo
   src/agent_naive.h
   src/myrand.cpp
 
+  src/eval.cpp
   src/scoring.cpp
   src/alphabeta.cpp
 
