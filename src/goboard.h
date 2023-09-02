@@ -17,6 +17,8 @@ class GoString;
 using GridMap = std::unordered_map<Point, std::shared_ptr<GoString>, PointHash>;
 class Board;
 using BoardPtr = std::shared_ptr<Board>;
+class GameState;
+using GameStatePtr = std::shared_ptr<GameState>;
 
 // Initialize random hash keys:
 static const Hasher hasher {};
@@ -54,21 +56,7 @@ class GoString {
    : color{color}, stones{stones}, liberties{liberties} {}
   void remove_liberty(const Point &point) {liberties.erase(point);}
   void add_liberty(const Point &point) {liberties.insert(point);}
-  GoString* merged_with(GoString &go_string) const {
-    // std::cout << "in merged_with for string with " << go_string.stones.size() << " stones\n";
-    assert(go_string.color == color);
-    // std::cout << "combining stones\n";
-    PointSet combined_stones(stones);
-    combined_stones.insert(go_string.stones.begin(), go_string.stones.end());
-    // std::cout << "combining liberties\n";
-    PointSet new_liberties(liberties);
-    new_liberties.insert(go_string.liberties.begin(), go_string.liberties.end());
-    // std::cout << "removing stones from liberties\n";
-    for (const auto& stone : combined_stones)
-      new_liberties.erase(stone);
-    // std::cout << "returning new pointer\n";
-    return new GoString(color, combined_stones, new_liberties);
-  }
+  GoString* merged_with(GoString &go_string) const;
   int num_liberties() const { return liberties.size(); }
   bool operator==(GoString const& rhs) const {
     return (color == rhs.color) && (stones == rhs.stones) && (liberties == rhs.liberties);
@@ -132,7 +120,7 @@ public:
 
 class GameState : public std::enable_shared_from_this<GameState> {
 private:
-  std::shared_ptr<GameState> previous_state;
+  GameStatePtr previous_state;
   std::optional<Move> last_move;
   // Todo: review whether this should be a set?
   std::vector<std::pair<Player, uint64_t>> previous_hashes;
@@ -140,7 +128,7 @@ private:
 public:
   Player next_player;
   BoardPtr board;
-  GameState(BoardPtr board, Player next_player, std::shared_ptr<GameState> previous_state, std::optional<Move> last_move)
+  GameState(BoardPtr board, Player next_player, GameStatePtr previous_state, std::optional<Move> last_move)
     : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move} {
     if (previous_state) {
       previous_hashes = previous_state->previous_hashes;
@@ -148,57 +136,20 @@ public:
     }
   }
 
-  std::shared_ptr<GameState> apply_move(Move m);
+  GameStatePtr apply_move(Move m);
 
-  static std::shared_ptr<GameState> new_game(int board_size) {
+  static GameStatePtr new_game(int board_size) {
     auto board = std::make_shared<Board>(board_size, board_size);
-    return std::make_shared<GameState>(board, Player::black, std::shared_ptr<GameState>(), std::nullopt);
+    return std::make_shared<GameState>(board, Player::black, GameStatePtr(), std::nullopt);
   }
 
-  bool is_over() const {
-    if (! last_move)
-      return false;
-    else if (last_move.value().is_resign)
-      return true;
-    auto second_last_move = previous_state->last_move;
-    if (! second_last_move)
-      return false;
-    else
-      return last_move.value().is_pass && second_last_move.value().is_pass;
-  }
+  bool is_over() const;
 
-  bool is_move_self_capture(Player player, Move m) const {
-    if (! m.is_play)
-      return false;
-    auto next_board = board->deepcopy();
-    next_board->place_stone(player, m.point.value());
-    auto new_string = next_board->get_go_string(m.point.value());
-    assert(new_string);
-    return new_string.value()->num_liberties() == 0;
-  }
+  bool is_move_self_capture(Player player, Move m) const;
 
-  bool does_move_violate_ko(Player player, Move m) const {
-    if (! m.is_play)
-      return false;
-    auto next_board = board->deepcopy();
-    next_board->place_stone(player, m.point.value());
-    auto next_situation = std::make_pair(other_player(player), next_board->get_hash());
-    // std::cout << "Checking ko, next: " << int(other_player(player)) << " " << next_board->get_hash() << std::endl;
-    // for (const auto& [p, h] : previous_hashes) {
-    //   std::cout << "   prev:  " << int(p) << " " << h << std::endl;
-    // }
-    return std::find(previous_hashes.begin(), previous_hashes.end(), next_situation) != previous_hashes.end();
-  }
+  bool does_move_violate_ko(Player player, Move m) const;
 
-  bool is_valid_move(Move m) const {
-    if (is_over())
-      return false;
-    if (m.is_pass || m.is_resign)
-      return true;
-    return (! board->get(m.point.value())) &&
-      (! is_move_self_capture(next_player, m)) &&
-      (! does_move_violate_ko(next_player, m));
-  }
+  bool is_valid_move(Move m) const;
 
 };
 

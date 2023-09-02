@@ -26,7 +26,7 @@ namespace gtp {
 
     std::istream& input = std::cin;
     std::ostream& output = std::cout;
-    std::shared_ptr<GameState> game_state = GameState::new_game(19);
+    GameStatePtr game_state = GameState::new_game(19);
 
     std::unordered_map<std::string, Response (GTPFrontend::*)(const ArgList&)> handlers = {
       {"name", &GTPFrontend::handle_name},

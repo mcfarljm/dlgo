@@ -39,7 +39,7 @@ struct GameResult {
   GameResult(int black, int white, float komi=7.5) :
     black(black), white(white), komi(komi) {}
 
-  GameResult(std::shared_ptr<GameState> game_state, float komi=7.5) : komi(komi) {
+  GameResult(GameStatePtr game_state, float komi=7.5) : komi(komi) {
     auto territory = Territory::evaluate_territory(game_state->board);
     black = territory.num_black_territory + territory.num_black_stones;
     white = territory.num_white_territory + territory.num_white_stones;

@@ -3,6 +3,22 @@
 #include <string>
 
 
+GoString* GoString::merged_with(GoString &go_string) const {
+  // std::cout << "in merged_with for string with " << go_string.stones.size() << " stones\n";
+  assert(go_string.color == color);
+  // std::cout << "combining stones\n";
+  PointSet combined_stones(stones);
+  combined_stones.insert(go_string.stones.begin(), go_string.stones.end());
+  // std::cout << "combining liberties\n";
+  PointSet new_liberties(liberties);
+  new_liberties.insert(go_string.liberties.begin(), go_string.liberties.end());
+  // std::cout << "removing stones from liberties\n";
+  for (const auto& stone : combined_stones)
+    new_liberties.erase(stone);
+  // std::cout << "returning new pointer\n";
+  return new GoString(color, combined_stones, new_liberties);
+}
+
 void Board::place_stone(Player player, const Point& point) {
   assert(is_on_grid(point));
   assert(grid.find(point) == grid.end());
@@ -83,9 +99,9 @@ GridMap deepcopy_grid(const GridMap& grid) {
   return new_grid;
 }
 
-std::shared_ptr<GameState> GameState::apply_move(Move m) {
+GameStatePtr GameState::apply_move(Move m) {
   // std::cout << "In apply move " << m.is_play << "\n";
-  std::shared_ptr<Board> next_board;
+  BoardPtr next_board;
   if (m.is_play) {
     next_board = board->deepcopy();
     next_board->place_stone(next_player, m.point.value());
@@ -93,4 +109,50 @@ std::shared_ptr<GameState> GameState::apply_move(Move m) {
     next_board.reset(new Board(*board)); // Shallow copy
   }
   return std::make_shared<GameState>(next_board, other_player(next_player), shared_from_this(), m);
+}
+
+
+bool GameState::is_over() const {
+  if (! last_move)
+    return false;
+  else if (last_move.value().is_resign)
+    return true;
+  auto second_last_move = previous_state->last_move;
+  if (! second_last_move)
+    return false;
+  else
+    return last_move.value().is_pass && second_last_move.value().is_pass;
+}
+
+bool GameState::is_move_self_capture(Player player, Move m) const {
+  if (! m.is_play)
+    return false;
+  auto next_board = board->deepcopy();
+  next_board->place_stone(player, m.point.value());
+  auto new_string = next_board->get_go_string(m.point.value());
+  assert(new_string);
+  return new_string.value()->num_liberties() == 0;
+}
+
+bool GameState::does_move_violate_ko(Player player, Move m) const {
+  if (! m.is_play)
+    return false;
+  auto next_board = board->deepcopy();
+  next_board->place_stone(player, m.point.value());
+  auto next_situation = std::make_pair(other_player(player), next_board->get_hash());
+  // std::cout << "Checking ko, next: " << int(other_player(player)) << " " << next_board->get_hash() << std::endl;
+  // for (const auto& [p, h] : previous_hashes) {
+  //   std::cout << "   prev:  " << int(p) << " " << h << std::endl;
+  // }
+  return std::find(previous_hashes.begin(), previous_hashes.end(), next_situation) != previous_hashes.end();
+}
+
+bool GameState::is_valid_move(Move m) const {
+  if (is_over())
+    return false;
+  if (m.is_pass || m.is_resign)
+    return true;
+  return (! board->get(m.point.value())) &&
+    (! is_move_self_capture(next_player, m)) &&
+    (! does_move_violate_ko(next_player, m));
 }
