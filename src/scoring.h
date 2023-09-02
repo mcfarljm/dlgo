@@ -7,29 +7,6 @@
 #include "goboard.h"
 
 
-struct GameResult {
-  int black;
-  int white;
-  float komi;
-
-GameResult(int black, int white, float komi=7.5) :
-  black(black), white(white), komi(komi) {}
-
-  Player winner() {
-    if (black > white + komi)
-      return Player::black;
-    else
-      return Player::white;
-  }
-
-  float winning_margin() {
-    float white_adjusted = white + komi;
-    return abs(black - white_adjusted);
-  }
-
-};
-
-
 enum class TerritoryStatus {
   black_stone, white_stone,
   black_territory, white_territory,
@@ -53,6 +30,34 @@ private:
   PointSet dame_points;
 };
 
+
+struct GameResult {
+  int black;
+  int white;
+  float komi;
+
+  GameResult(int black, int white, float komi=7.5) :
+    black(black), white(white), komi(komi) {}
+
+  GameResult(std::shared_ptr<GameState> game_state, float komi=7.5) : komi(komi) {
+    auto territory = Territory::evaluate_territory(game_state->board);
+    black = territory.num_black_territory + territory.num_black_stones;
+    white = territory.num_white_territory + territory.num_white_stones;
+  }
+
+  Player winner() {
+    if (black > white + komi)
+      return Player::black;
+    else
+      return Player::white;
+  }
+
+  float winning_margin() {
+    float white_adjusted = white + komi;
+    return abs(black - white_adjusted);
+  }
+
+};
 
 
 #endif // SCORING_H
