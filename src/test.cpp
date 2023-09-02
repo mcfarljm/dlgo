@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "gtp/command.h"
 #include "gtp/response.h"
+#include "scoring.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
@@ -231,3 +232,37 @@ TEST_CASE( "Test GTP command parsing", "[gtp]" ) {
 
 }
 
+
+TEST_CASE( "Test scoring", "[scoring]" ) {
+  // .w.ww
+  // wwww.
+  // bbbww
+  // .bbbb
+  // .b.b.
+  auto board = std::make_shared<Board>(5, 5);
+  board->place_stone(Player::black, Point(1, 2));
+  board->place_stone(Player::black, Point(1, 4));
+  board->place_stone(Player::black, Point(2, 2));
+  board->place_stone(Player::black, Point(2, 3));
+  board->place_stone(Player::black, Point(2, 4));
+  board->place_stone(Player::black, Point(2, 5));
+  board->place_stone(Player::black, Point(3, 1));
+  board->place_stone(Player::black, Point(3, 2));
+  board->place_stone(Player::black, Point(3, 3));
+  board->place_stone(Player::white, Point(3, 4));
+  board->place_stone(Player::white, Point(3, 5));
+  board->place_stone(Player::white, Point(4, 1));
+  board->place_stone(Player::white, Point(4, 2));
+  board->place_stone(Player::white, Point(4, 3));
+  board->place_stone(Player::white, Point(4, 4));
+  board->place_stone(Player::white, Point(5, 2));
+  board->place_stone(Player::white, Point(5, 4));
+  board->place_stone(Player::white, Point(5, 5));
+
+  auto territory = Territory::evaluate_territory(board);
+  REQUIRE(9 == territory.num_black_stones);
+  REQUIRE(4 == territory.num_black_territory);
+  REQUIRE(9 == territory.num_white_stones);
+  REQUIRE(3 == territory.num_white_territory);
+  REQUIRE(0 == territory.num_dame);
+}

@@ -21,6 +21,8 @@ add_library(dlgo
   src/agent_naive.h
   src/myrand.cpp
 
+  src/scoring.cpp
+
   src/gtp/command.h
   src/gtp/response.h
   src/gtp/frontend.h
