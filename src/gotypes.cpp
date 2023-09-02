@@ -12,3 +12,8 @@ std::vector<Point> Point::neighbors() const {
     Point{row, col+1},
   };
 }
+
+std::ostream& operator<<(std::ostream& os, Point p) {
+  os << "(" << p.row << "," << p.col << ")";
+  return os;
+}

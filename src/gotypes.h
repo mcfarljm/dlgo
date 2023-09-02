@@ -14,6 +14,7 @@ struct Point {
   bool operator==(const Point& rhs) const {
     return row == rhs.row && col == rhs.col;
   }
+  friend std::ostream& operator<<(std::ostream&, Point);
 };
 
 class PointHash {
