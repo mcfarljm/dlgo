@@ -12,6 +12,12 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
+# To use:
+# - compile in new dir: cmake .. -DCMAKE_BUILD_TYPE=PROFILE
+# - run executable as normal
+# - run gprof -P <exename> > prof.out
+# The -P is optional but produces only the call graph, which is much easier to use.
+set( CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_DEBUG} -pg" )
 
 add_library(dlgo
   src/utils.cpp
