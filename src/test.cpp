@@ -10,6 +10,7 @@
 #include "scoring.h"
 #include "eval.h"
 #include "alphabeta.h"
+#include "mcts.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
@@ -271,7 +272,7 @@ TEST_CASE( "Test scoring", "[scoring]" ) {
 }
 
 
-TEST_CASE( "Benchmark alpha beta", "[!benchmark]" ) {
+TEST_CASE( "Benchmark alpha beta", "[!benchmark][alphabeta]" ) {
 
   const int MIN_SCORE = -999999;
   auto game = GameState::new_game(9);
@@ -279,4 +280,21 @@ TEST_CASE( "Benchmark alpha beta", "[!benchmark]" ) {
    return alpha_beta_result(*game, 2, MIN_SCORE, MIN_SCORE, &capture_diff);
   };
 
+}
+
+
+TEST_CASE( "Test MCTS", "[mcts]" ) {
+  // A test case for profiling
+  auto agent = MCTSAgent(10, 1.4);
+  auto game = GameState::new_game(9);
+  auto move = agent.select_move(*game);
+}
+
+
+TEST_CASE( "Benchmark MCTS", "[!benchmark][mctsbench]" ) {
+  auto agent = MCTSAgent(10, 1.4);
+  auto game = GameState::new_game(9);
+  BENCHMARK("MCTS") {
+    return agent.select_move(*game);
+  };
 }
