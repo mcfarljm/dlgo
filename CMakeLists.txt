@@ -18,12 +18,13 @@ add_library(dlgo
   src/goboard.cpp
   src/gotypes.cpp
   src/agent_helpers.cpp
-  src/agent_naive.h
+  src/agent_naive.cpp
   src/myrand.cpp
 
   src/eval.cpp
   src/scoring.cpp
   src/alphabeta.cpp
+  src/mcts.cpp
 
   src/gtp/command.h
   src/gtp/response.h

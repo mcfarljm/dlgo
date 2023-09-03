@@ -10,23 +10,16 @@
 class RandomBot : public Agent {
 public:
   /// Choose a random valid move that preserves our own eyes.
-  Move select_move(const GameState& game_state) {
-    std::vector<Point> candidates;
-    for (auto r=1; r <= game_state.board->num_rows; r++) {
-      for (auto c=1; c <= game_state.board->num_cols; c++) {
-        auto candidate = Point(r, c);
-        if (game_state.is_valid_move(Move::play(candidate)) &&
-            ! is_point_an_eye(*game_state.board, candidate, game_state.next_player))
-          candidates.push_back(candidate);
-      }
-    }
-    if (candidates.empty())
-      return Move::pass();
-    
-    std::uniform_int_distribution<> dist(0, candidates.size() - 1);
-    auto idx = dist(rng);
-    return Move::play(candidates[idx]);
-  }
+  Move select_move(const GameState& game_state);
+};
+
+class FastRandomBot : public Agent {
+public:
+  Move select_move(const GameState& game_state);
+private:
+  std::pair<int, int> cached_dim = {0, 0};
+  std::vector<Point> point_cache;
+  void update_cache(std::pair<int, int> dim);
 };
 
 #endif // AGENT_NAIVE_H
