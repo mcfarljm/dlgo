@@ -4,6 +4,7 @@
 #include <cassert>
 #include <unordered_set>
 #include <unordered_map>
+// #include <map>
 #include <optional>
 #include <memory>
 #include <iostream>
@@ -15,6 +16,7 @@
 using PointSet = std::unordered_set<Point,PointHash>;
 class GoString;
 using GridMap = std::unordered_map<Point, std::shared_ptr<GoString>, PointHash>;
+// using GridMap = std::map<Point, std::shared_ptr<GoString>>;
 class Board;
 using BoardPtr = std::shared_ptr<Board>;
 using ConstBoardPtr = std::shared_ptr<const Board>;
@@ -74,7 +76,7 @@ private:
   uint64_t hash;
 public:
   int num_rows, num_cols;
-  std::unordered_map<Point, std::shared_ptr<GoString>, PointHash> grid;
+  GridMap grid;
 
   Board(int num_rows, int num_cols, GridMap grid = {}, uint64_t hash = 0)
     : num_rows{num_rows}, num_cols{num_cols}, grid(grid), hash(hash) {
