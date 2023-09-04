@@ -298,3 +298,13 @@ TEST_CASE( "Benchmark MCTS", "[!benchmark][mctsbench]" ) {
     return agent.select_move(*game);
   };
 }
+
+
+TEST_CASE( "Frozenset", "[frozenset]") {
+  auto s0 = FrozenSet({1, 2, 3});
+  auto s1 = FrozenSet({1, 5});
+  auto s2 = s0 + s1;
+  auto s3 = s0 - s1;
+  REQUIRE( 4 == s2.size() );
+  REQUIRE( 2 == s3.size() );
+}
