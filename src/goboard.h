@@ -83,9 +83,6 @@ class GoString {
 };
 
 
-GridMap deepcopy_grid(const GridMap&);
-
-
 class Board {
 private:
   uint64_t hash;
@@ -101,13 +98,12 @@ public:
 
   friend std::ostream& operator<<(std::ostream&, const Board& b);
 
+  // This is a misnomer holdover from the "slow" implementation that requires
+  // deep copies.  Current implementation uses immutable sets inside the grid
+  // map, so we don't actually need to deep copy the grid.
   BoardPtr deepcopy() {
-    return std::make_shared<Board>(num_rows, num_cols, deepcopy_grid(grid), hash);
+    return std::make_shared<Board>(num_rows, num_cols, grid, hash);
   }
-
-  // Board(const Board& b) :
-  //   num_rows(b.num_rows), num_cols(b.num_cols),
-  //   grid(deepcopy_grid(b.grid)) {}
 
   bool is_on_grid(const Point& point) const {
     return 1 <= point.row && point.row <= num_rows &&
