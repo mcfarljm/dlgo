@@ -17,23 +17,6 @@ static std::string stone_to_char(std::optional<Player> stone) {
 }
 
 
-GoString* GoString::merged_with(GoString &go_string) const {
-  // std::cout << "in merged_with for string with " << go_string.stones.size() << " stones\n";
-  assert(go_string.color == color);
-  // std::cout << "combining stones\n";
-  PointSet combined_stones(stones);
-  combined_stones.insert(go_string.stones.begin(), go_string.stones.end());
-  // std::cout << "combining liberties\n";
-  PointSet new_liberties(liberties);
-  new_liberties.insert(go_string.liberties.begin(), go_string.liberties.end());
-  // std::cout << "removing stones from liberties\n";
-  for (const auto& stone : combined_stones)
-    new_liberties.erase(stone);
-  // std::cout << "returning new pointer\n";
-  return new GoString(color, combined_stones, new_liberties);
-}
-
-
 std::ostream& operator<<(std::ostream& os, const Board& b) {
   for (auto row = b.num_rows; row > 0; row--) {
     auto pad = row <= 9 ? " " : "";
@@ -58,7 +41,8 @@ void Board::place_stone(Player player, const Point& point) {
 
   std::unordered_set<std::shared_ptr<GoString>> adjacent_same_color;
   std::unordered_set<std::shared_ptr<GoString>> adjacent_opposite_color;
-  PointSet liberties;
+  // PointSet liberties;
+  std::vector<Point> liberties;
 
   // Check neighbors
   // std::cout << "Looping over neighbors\n";
@@ -67,7 +51,7 @@ void Board::place_stone(Player player, const Point& point) {
     auto neighbor_string_it = grid.find(neighbor);
     if (neighbor_string_it == grid.end()) {
       // std::cout << "Adding liberty\n";
-      liberties.insert(neighbor);
+      liberties.push_back(neighbor);
     }
     else if (neighbor_string_it->second->color == player) {
       // std::cout << "Found adjacent same color\n";
@@ -79,13 +63,13 @@ void Board::place_stone(Player player, const Point& point) {
     }
   }
 
-  PointSet single_point({point});
-  auto new_string = std::make_shared<GoString>(player, std::move(single_point), liberties);
+  auto new_string = std::make_shared<GoString>(player, FrozenPointSet({point}),
+                                               FrozenSet<Point, PointHash>(liberties.begin(), liberties.end()));
   // Merge new string with adjacent ones:
   // std::cout << "Merging new string with " << adjacent_same_color.size() << " adjacent\n";
   for (const auto &same_color_string : adjacent_same_color) {
     // std::cout << "merging new string with same color with " << same_color_string->stones.size() << " stones\n";
-    new_string.reset(new_string->merged_with(*same_color_string));
+    new_string = new_string->merged_with(*same_color_string);
   }
   for (const auto &new_string_point : new_string->stones)
     grid[new_string_point] = new_string;
@@ -93,11 +77,23 @@ void Board::place_stone(Player player, const Point& point) {
   hash ^= hasher.point_keys[size_t(player)][point.row-1][point.col-1];
   // std::cout << "  Hash place << " << int(player) << " " << point.row << " " << point.col << " " << hasher.point_keys[size_t(player)][point.row-1][point.col-1] << " " << hash << std::endl;
 
-  for (const auto &other_color_string : adjacent_opposite_color)
-    other_color_string->remove_liberty(point);
-  for (const auto &other_color_string : adjacent_opposite_color)
-    if (other_color_string->num_liberties() == 0)
+  for (const auto &other_color_string : adjacent_opposite_color) {
+    auto replacement = other_color_string->without_liberty(point);
+    if (replacement->num_liberties() > 0)
+      replace_string(other_color_string->without_liberty(point));
+    else
       remove_string(other_color_string);
+  }
+  //   other_color_string->remove_liberty(point);
+  // for (const auto &other_color_string : adjacent_opposite_color)
+  //   if (other_color_string->num_liberties() == 0)
+  //     remove_string(other_color_string);
+}
+
+
+void Board::replace_string(std::shared_ptr<GoString> new_string) {
+  for (const auto& point : new_string->stones)
+    grid[point] = new_string;
 }
 
 
@@ -108,7 +104,7 @@ void Board::remove_string(std::shared_ptr<GoString> string) {
       if (neighbor_string_it == grid.end())
         continue;
       else if (neighbor_string_it->second != string)
-        neighbor_string_it->second->add_liberty(point);
+        replace_string(neighbor_string_it->second->with_liberty(point));
     }
     grid.erase(point);
     hash ^= hasher.point_keys[size_t(string->color)][point.row-1][point.col-1];

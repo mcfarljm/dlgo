@@ -12,8 +12,9 @@
 #include <algorithm> // std::find
 #include "gotypes.h"
 #include "hash.h"
+#include "frozenset.h"
 
-using PointSet = std::unordered_set<Point,PointHash>;
+using FrozenPointSet = FrozenSet<Point,PointHash>;
 class GoString;
 using GridMap = std::unordered_map<Point, std::shared_ptr<GoString>, PointHash>;
 // using GridMap = std::map<Point, std::shared_ptr<GoString>>;
@@ -53,14 +54,28 @@ class GoString {
 
  public:
   Player color;
-  PointSet stones;
-  PointSet liberties;
+  FrozenPointSet stones;
+  FrozenPointSet liberties;
 
-  GoString(Player color, PointSet stones, PointSet liberties)
+  GoString(Player color, FrozenPointSet stones, FrozenPointSet liberties)
    : color{color}, stones{stones}, liberties{liberties} {}
-  void remove_liberty(const Point &point) {liberties.erase(point);}
-  void add_liberty(const Point &point) {liberties.insert(point);}
-  GoString* merged_with(GoString &go_string) const;
+  std::shared_ptr<GoString> without_liberty(Point point) {
+    auto new_liberties = liberties - FrozenPointSet({point});
+    return std::make_shared<GoString>(color, stones, new_liberties);
+  }
+  std::shared_ptr<GoString> with_liberty(Point point) {
+    auto new_liberties = liberties + FrozenPointSet({point});
+    return std::make_shared<GoString>(color, stones, new_liberties);
+  }
+
+  std::shared_ptr<GoString> merged_with(GoString &go_string) const {
+    assert(go_string.color == color);
+    auto combined_stones = stones + go_string.stones;
+    return std::make_shared<GoString>(color, combined_stones,
+                                      (liberties + go_string.liberties) - combined_stones);
+  }
+
+  
   int num_liberties() const { return liberties.size(); }
   bool operator==(GoString const& rhs) const {
     return (color == rhs.color) && (stones == rhs.stones) && (liberties == rhs.liberties);
@@ -120,6 +135,7 @@ public:
   uint64_t get_hash() const { return hash; }
 
  private:
+  void replace_string(std::shared_ptr<GoString> string);
   void remove_string(std::shared_ptr<GoString> string);
 
 };

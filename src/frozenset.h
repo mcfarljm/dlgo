@@ -4,9 +4,9 @@
 #include <unordered_map>
 
 
-template <class T>
+template <class T, class Hash = std::hash<T>>
 class FrozenSet {
-  std::unordered_set<T> items;
+  std::unordered_set<T, Hash> items;
 
 public:
   FrozenSet() {}
@@ -20,6 +20,11 @@ public:
 
   auto begin() const { return items.begin(); }
   auto end() const { return items.end(); }
+
+
+  bool operator==(FrozenSet const& rhs) const {
+    return items == rhs.items;
+  }
 
   FrozenSet operator+(FrozenSet const& rhs) const {
     auto new_set = FrozenSet(items.begin(), items.end());
