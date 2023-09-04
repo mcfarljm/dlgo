@@ -300,6 +300,29 @@ TEST_CASE( "Benchmark MCTS", "[!benchmark][mctsbench]" ) {
 }
 
 
+TEST_CASE( "Benchmark simulate game", "[!benchmark][simgame]" ) {
+  auto game = GameState::new_game(9);
+  BENCHMARK("Simulate game") {
+    return MCTSAgent::simulate_random_game(game);
+  };
+}
+
+TEST_CASE( "Benchmark valid move", "[!benchmark][validmove]" ) {
+  auto game = GameState::new_game(9);
+  BENCHMARK("is_valid_move") {
+    return game->is_valid_move(Move::play(Point(5,5)));
+  };
+}
+
+
+TEST_CASE( "Benchmark first move", "[!benchmark][firstmove]" ) {
+  auto game = GameState::new_game(19);
+  BENCHMARK("first move") {
+    return game->apply_move(Move::play(Point(5, 5)));
+  };
+}
+
+
 TEST_CASE( "Frozenset", "[frozenset]") {
   auto s0 = FrozenSet({1, 2, 3});
   auto s1 = FrozenSet({1, 5});
