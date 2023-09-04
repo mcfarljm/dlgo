@@ -283,9 +283,9 @@ TEST_CASE( "Benchmark alpha beta", "[!benchmark][alphabeta]" ) {
 }
 
 
-TEST_CASE( "Test MCTS", "[mcts]" ) {
+TEST_CASE( "Test MCTS", "[.mcts]" ) {
   // A test case for profiling
-  auto agent = MCTSAgent(10, 1.4);
+  auto agent = MCTSAgent(100, 1.4);
   auto game = GameState::new_game(9);
   auto move = agent.select_move(*game);
 }
