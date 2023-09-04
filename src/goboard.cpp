@@ -151,6 +151,20 @@ bool Board::is_self_capture(Player player, Point point) {
                      [](auto n){return n->num_liberties() == 1;});
 }
 
+bool Board::will_capture(Player player, Point point) {
+  for (auto const& neighbor : neighbor_table_ptr->find(point)->second) {
+    auto neighbor_string_it = grid.find(neighbor);
+    if (neighbor_string_it == grid.end())
+      continue;
+    else if (neighbor_string_it->second->color == player)
+      continue;
+    else if (neighbor_string_it->second->num_liberties() == 1)
+      // This move would capture.
+      return true;
+  }
+  return false;
+}
+
 
 GameStatePtr GameState::apply_move(Move m) const {
   // std::cout << "In apply move " << m.is_play << "\n";
@@ -194,6 +208,8 @@ bool GameState::is_move_self_capture(Player player, Move m) const {
 
 bool GameState::does_move_violate_ko(Player player, Move m) const {
   if (! m.is_play)
+    return false;
+  if (! board->will_capture(player, m.point.value()))
     return false;
   auto next_board = board->deepcopy();
   next_board->place_stone(player, m.point.value());

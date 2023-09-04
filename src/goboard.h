@@ -139,6 +139,7 @@ public:
   uint64_t get_hash() const { return hash; }
 
   bool is_self_capture(Player, Point);
+  bool will_capture(Player, Point);
 
  private:
   void replace_string(std::shared_ptr<GoString> string);
