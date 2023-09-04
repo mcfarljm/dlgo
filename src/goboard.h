@@ -89,6 +89,7 @@ private:
   static std::map<std::pair<int,int>,
                             std::unordered_map<Point, std::vector<Point>, PointHash>> neighbor_tables;
   static void init_neighbor_table(std::pair<int,int>);
+  std::unordered_map<Point, std::vector<Point>, PointHash>* neighbor_table_ptr;
 public:
   int num_rows, num_cols;
   GridMap grid;
@@ -100,6 +101,7 @@ public:
     auto dim = std::make_pair(num_rows, num_cols);
     if (neighbor_tables.find(dim) == neighbor_tables.end())
       init_neighbor_table(dim);
+    neighbor_table_ptr = &(neighbor_tables.find(dim)->second);
   }
 
   friend std::ostream& operator<<(std::ostream&, const Board& b);
@@ -135,6 +137,8 @@ public:
   }
 
   uint64_t get_hash() const { return hash; }
+
+  bool is_self_capture(Player, Point);
 
  private:
   void replace_string(std::shared_ptr<GoString> string);

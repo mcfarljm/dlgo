@@ -69,7 +69,7 @@ void Board::place_stone(Player player, const Point& point) {
 
   // Check neighbors
   // std::cout << "Looping over neighbors\n";
-  for (const auto &neighbor : point.neighbors()) {
+  for (const auto &neighbor : neighbor_table_ptr->find(point)->second) {
     if (! is_on_grid(neighbor)) continue;
     auto neighbor_string_it = grid.find(neighbor);
     if (neighbor_string_it == grid.end()) {
@@ -122,7 +122,7 @@ void Board::replace_string(std::shared_ptr<GoString> new_string) {
 
 void Board::remove_string(std::shared_ptr<GoString> string) {
   for (const auto& point : string->stones) {
-    for (const auto& neighbor : point.neighbors()) {
+    for (const auto& neighbor : neighbor_table_ptr->find(point)->second) {
       auto neighbor_string_it = grid.find(neighbor);
       if (neighbor_string_it == grid.end())
         continue;
@@ -133,6 +133,22 @@ void Board::remove_string(std::shared_ptr<GoString> string) {
     hash ^= hasher.point_keys[size_t(string->color)][point.row-1][point.col-1];
     // std::cout << "  Hash remove << " << int(string->color) << " " << point.row << " " << point.col << " " << hasher.point_keys[size_t(string->color)][point.row-1][point.col-1] << " " << hash << std::endl;
   }
+}
+
+bool Board::is_self_capture(Player player, Point point) {
+  std::vector<std::shared_ptr<GoString>> friendly_strings;
+  for (auto const& neighbor : neighbor_table_ptr->find(point)->second) {
+    auto neighbor_string_it = grid.find(neighbor);
+    if (neighbor_string_it == grid.end())
+      return false;
+    else if (neighbor_string_it->second->color == player)
+      friendly_strings.push_back(neighbor_string_it->second);
+    else if (neighbor_string_it->second->num_liberties() == 1)
+      // This move is a real capture, not a self capture.
+      return false;
+  }
+  return std::all_of(friendly_strings.begin(), friendly_strings.end(),
+                     [](auto n){return n->num_liberties() == 1;});
 }
 
 
@@ -173,11 +189,7 @@ std::optional<Player> GameState::winner() const {
 bool GameState::is_move_self_capture(Player player, Move m) const {
   if (! m.is_play)
     return false;
-  auto next_board = board->deepcopy();
-  next_board->place_stone(player, m.point.value());
-  auto new_string = next_board->get_go_string(m.point.value());
-  assert(new_string);
-  return new_string.value()->num_liberties() == 0;
+  return board->is_self_capture(player, m.point.value());
 }
 
 bool GameState::does_move_violate_ko(Player player, Move m) const {
