@@ -35,6 +35,29 @@ std::ostream& operator<<(std::ostream& os, const Board& b) {
   return os;
 }
 
+
+std::map<std::pair<int,int>,
+         std::unordered_map<Point, std::vector<Point>, PointHash>> Board::neighbor_tables = {};
+
+void Board::init_neighbor_table(std::pair<int,int> dim) {
+  auto [rows, cols] = dim;
+  std::cout << "init neighbor table: " << rows << " " << cols << std::endl;
+  std::unordered_map<Point, std::vector<Point>, PointHash> new_table;
+  for (int r=1; r <= rows; ++r) {
+    for (int c=1; c <= cols; ++c) {
+      auto p = Point(r, c);
+      std::vector<Point> true_neighbors;
+      for (auto const& n : p.neighbors()) {
+        if (1 <= n.row && n.row <= rows && 1 <= n.col && n.col <= cols)
+          true_neighbors.push_back(n);
+      }
+      new_table.emplace(p, true_neighbors);
+    }
+  }
+  Board::neighbor_tables.emplace(dim, new_table);
+}
+
+
 void Board::place_stone(Player player, const Point& point) {
   assert(is_on_grid(point));
   assert(grid.find(point) == grid.end());

@@ -4,7 +4,7 @@
 #include <cassert>
 #include <unordered_set>
 #include <unordered_map>
-// #include <map>
+#include <map>
 #include <optional>
 #include <memory>
 #include <iostream>
@@ -86,6 +86,9 @@ class GoString {
 class Board {
 private:
   uint64_t hash;
+  static std::map<std::pair<int,int>,
+                            std::unordered_map<Point, std::vector<Point>, PointHash>> neighbor_tables;
+  static void init_neighbor_table(std::pair<int,int>);
 public:
   int num_rows, num_cols;
   GridMap grid;
@@ -94,6 +97,9 @@ public:
     : num_rows{num_rows}, num_cols{num_cols}, grid(grid), hash(hash) {
     assert(num_rows <= HASH_MAX_BOARD && num_cols <= HASH_MAX_BOARD);
     // std::cout << "in board, hash: " << hasher.point_keys[0][0][0] << "\n";
+    auto dim = std::make_pair(num_rows, num_cols);
+    if (neighbor_tables.find(dim) == neighbor_tables.end())
+      init_neighbor_table(dim);
   }
 
   friend std::ostream& operator<<(std::ostream&, const Board& b);
