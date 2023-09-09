@@ -11,6 +11,7 @@
 #include "eval.h"
 #include "alphabeta.h"
 #include "mcts.h"
+#include "zero/encoder.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
@@ -338,4 +339,24 @@ TEST_CASE( "Frozenset", "[frozenset]") {
   auto s3 = s0 - s1;
   REQUIRE( 4 == s2.size() );
   REQUIRE( 2 == s3.size() );
+}
+
+
+TEST_CASE( "Simple encoder", "[encoder]") {
+  auto encoder = SimpleEncoder(9);
+  REQUIRE( encoder.decode_move_index(9*9).is_pass );
+  REQUIRE( encoder.decode_move_index(0).point.value() == Point(1, 1) );
+  REQUIRE( encoder.decode_move_index(9).point.value() == Point(2, 1) );
+
+  auto game = GameState::new_game(9);
+  auto tensor = encoder.encode(*game);
+  auto tensor_a = tensor.accessor<float,3>();
+  for (auto filter=0; filter<11; ++filter) {
+    for (auto i=0; i<9; ++i) {
+      for (auto j=0; j<9; j++) {
+        auto val = (filter == 9) ? 1.0 : 0.0;
+        REQUIRE( tensor_a[filter][i][j] == val );
+      }
+    }
+  }
 }

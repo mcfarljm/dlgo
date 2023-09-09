@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 project(dlgo LANGUAGES CXX)
 
+find_package(Torch REQUIRED)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
 Include(FetchContent)
 
 FetchContent_Declare(
@@ -11,6 +15,7 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(Catch2)
+
 
 # To use:
 # - compile in new dir: cmake .. -DCMAKE_BUILD_TYPE=PROFILE
@@ -36,7 +41,12 @@ add_library(dlgo
   src/gtp/response.h
   src/gtp/frontend.h
   src/gtp/gtp_board.cpp
+
+  src/zero/encoder.cpp
 )
+
+target_link_libraries(dlgo "${TORCH_LIBRARIES}")
+
 add_executable(tests src/test.cpp)
 target_link_libraries(tests PRIVATE dlgo Catch2::Catch2WithMain)
 
