@@ -17,23 +17,6 @@ static std::string stone_to_char(std::optional<Player> stone) {
 }
 
 
-GoString* GoString::merged_with(GoString &go_string) const {
-  // std::cout << "in merged_with for string with " << go_string.stones.size() << " stones\n";
-  assert(go_string.color == color);
-  // std::cout << "combining stones\n";
-  PointSet combined_stones(stones);
-  combined_stones.insert(go_string.stones.begin(), go_string.stones.end());
-  // std::cout << "combining liberties\n";
-  PointSet new_liberties(liberties);
-  new_liberties.insert(go_string.liberties.begin(), go_string.liberties.end());
-  // std::cout << "removing stones from liberties\n";
-  for (const auto& stone : combined_stones)
-    new_liberties.erase(stone);
-  // std::cout << "returning new pointer\n";
-  return new GoString(color, combined_stones, new_liberties);
-}
-
-
 std::ostream& operator<<(std::ostream& os, const Board& b) {
   for (auto row = b.num_rows; row > 0; row--) {
     auto pad = row <= 9 ? " " : "";
@@ -52,22 +35,46 @@ std::ostream& operator<<(std::ostream& os, const Board& b) {
   return os;
 }
 
+
+std::map<std::pair<int,int>,
+         std::unordered_map<Point, std::vector<Point>, PointHash>> Board::neighbor_tables = {};
+
+void Board::init_neighbor_table(std::pair<int,int> dim) {
+  auto [rows, cols] = dim;
+  std::cout << "init neighbor table: " << rows << " " << cols << std::endl;
+  std::unordered_map<Point, std::vector<Point>, PointHash> new_table;
+  for (int r=1; r <= rows; ++r) {
+    for (int c=1; c <= cols; ++c) {
+      auto p = Point(r, c);
+      std::vector<Point> true_neighbors;
+      for (auto const& n : p.neighbors()) {
+        if (1 <= n.row && n.row <= rows && 1 <= n.col && n.col <= cols)
+          true_neighbors.push_back(n);
+      }
+      new_table.emplace(p, true_neighbors);
+    }
+  }
+  Board::neighbor_tables.emplace(dim, new_table);
+}
+
+
 void Board::place_stone(Player player, const Point& point) {
   assert(is_on_grid(point));
   assert(grid.find(point) == grid.end());
 
   std::unordered_set<std::shared_ptr<GoString>> adjacent_same_color;
   std::unordered_set<std::shared_ptr<GoString>> adjacent_opposite_color;
-  PointSet liberties;
+  // PointSet liberties;
+  std::vector<Point> liberties;
 
   // Check neighbors
   // std::cout << "Looping over neighbors\n";
-  for (const auto &neighbor : point.neighbors()) {
+  for (const auto &neighbor : neighbor_table_ptr->find(point)->second) {
     if (! is_on_grid(neighbor)) continue;
     auto neighbor_string_it = grid.find(neighbor);
     if (neighbor_string_it == grid.end()) {
       // std::cout << "Adding liberty\n";
-      liberties.insert(neighbor);
+      liberties.push_back(neighbor);
     }
     else if (neighbor_string_it->second->color == player) {
       // std::cout << "Found adjacent same color\n";
@@ -79,13 +86,13 @@ void Board::place_stone(Player player, const Point& point) {
     }
   }
 
-  PointSet single_point({point});
-  auto new_string = std::make_shared<GoString>(player, std::move(single_point), liberties);
+  auto new_string = std::make_shared<GoString>(player, FrozenPointSet({point}),
+                                               FrozenSet<Point, PointHash>(liberties.begin(), liberties.end()));
   // Merge new string with adjacent ones:
   // std::cout << "Merging new string with " << adjacent_same_color.size() << " adjacent\n";
   for (const auto &same_color_string : adjacent_same_color) {
     // std::cout << "merging new string with same color with " << same_color_string->stones.size() << " stones\n";
-    new_string.reset(new_string->merged_with(*same_color_string));
+    new_string = new_string->merged_with(*same_color_string);
   }
   for (const auto &new_string_point : new_string->stones)
     grid[new_string_point] = new_string;
@@ -93,22 +100,34 @@ void Board::place_stone(Player player, const Point& point) {
   hash ^= hasher.point_keys[size_t(player)][point.row-1][point.col-1];
   // std::cout << "  Hash place << " << int(player) << " " << point.row << " " << point.col << " " << hasher.point_keys[size_t(player)][point.row-1][point.col-1] << " " << hash << std::endl;
 
-  for (const auto &other_color_string : adjacent_opposite_color)
-    other_color_string->remove_liberty(point);
-  for (const auto &other_color_string : adjacent_opposite_color)
-    if (other_color_string->num_liberties() == 0)
+  for (const auto &other_color_string : adjacent_opposite_color) {
+    auto replacement = other_color_string->without_liberty(point);
+    if (replacement->num_liberties() > 0)
+      replace_string(other_color_string->without_liberty(point));
+    else
       remove_string(other_color_string);
+  }
+  //   other_color_string->remove_liberty(point);
+  // for (const auto &other_color_string : adjacent_opposite_color)
+  //   if (other_color_string->num_liberties() == 0)
+  //     remove_string(other_color_string);
+}
+
+
+void Board::replace_string(std::shared_ptr<GoString> new_string) {
+  for (const auto& point : new_string->stones)
+    grid[point] = new_string;
 }
 
 
 void Board::remove_string(std::shared_ptr<GoString> string) {
   for (const auto& point : string->stones) {
-    for (const auto& neighbor : point.neighbors()) {
+    for (const auto& neighbor : neighbor_table_ptr->find(point)->second) {
       auto neighbor_string_it = grid.find(neighbor);
       if (neighbor_string_it == grid.end())
         continue;
       else if (neighbor_string_it->second != string)
-        neighbor_string_it->second->add_liberty(point);
+        replace_string(neighbor_string_it->second->with_liberty(point));
     }
     grid.erase(point);
     hash ^= hasher.point_keys[size_t(string->color)][point.row-1][point.col-1];
@@ -116,21 +135,36 @@ void Board::remove_string(std::shared_ptr<GoString> string) {
   }
 }
 
-
-GridMap deepcopy_grid(const GridMap& grid) {
-  std::unordered_map<GoString*, std::shared_ptr<GoString>> memo;
-  for (const auto&[point, sptr] : grid) {
-    auto id = sptr.get();
-    if (memo.find(id) == memo.end())
-      // Might investigte the best way to do this:
-      // memo[id] = std::shared_ptr<GoString>(new GoString(*sptr));
-      memo.try_emplace(id, new GoString(*sptr));
+bool Board::is_self_capture(Player player, Point point) {
+  std::vector<std::shared_ptr<GoString>> friendly_strings;
+  for (auto const& neighbor : neighbor_table_ptr->find(point)->second) {
+    auto neighbor_string_it = grid.find(neighbor);
+    if (neighbor_string_it == grid.end())
+      return false;
+    else if (neighbor_string_it->second->color == player)
+      friendly_strings.push_back(neighbor_string_it->second);
+    else if (neighbor_string_it->second->num_liberties() == 1)
+      // This move is a real capture, not a self capture.
+      return false;
   }
-  GridMap new_grid;
-  for (const auto&[point, sptr] : grid)
-    new_grid.emplace(point, memo.find(sptr.get())->second);
-  return new_grid;
+  return std::all_of(friendly_strings.begin(), friendly_strings.end(),
+                     [](auto n){return n->num_liberties() == 1;});
 }
+
+bool Board::will_capture(Player player, Point point) {
+  for (auto const& neighbor : neighbor_table_ptr->find(point)->second) {
+    auto neighbor_string_it = grid.find(neighbor);
+    if (neighbor_string_it == grid.end())
+      continue;
+    else if (neighbor_string_it->second->color == player)
+      continue;
+    else if (neighbor_string_it->second->num_liberties() == 1)
+      // This move would capture.
+      return true;
+  }
+  return false;
+}
+
 
 GameStatePtr GameState::apply_move(Move m) const {
   // std::cout << "In apply move " << m.is_play << "\n";
@@ -169,15 +203,13 @@ std::optional<Player> GameState::winner() const {
 bool GameState::is_move_self_capture(Player player, Move m) const {
   if (! m.is_play)
     return false;
-  auto next_board = board->deepcopy();
-  next_board->place_stone(player, m.point.value());
-  auto new_string = next_board->get_go_string(m.point.value());
-  assert(new_string);
-  return new_string.value()->num_liberties() == 0;
+  return board->is_self_capture(player, m.point.value());
 }
 
 bool GameState::does_move_violate_ko(Player player, Move m) const {
   if (! m.is_play)
+    return false;
+  if (! board->will_capture(player, m.point.value()))
     return false;
   auto next_board = board->deepcopy();
   next_board->place_stone(player, m.point.value());

@@ -7,6 +7,9 @@
 #include "goboard.h"
 
 
+using PointSet = std::unordered_set<Point, PointHash>;
+
+
 enum class TerritoryStatus {
   black_stone, white_stone,
   black_territory, white_territory,

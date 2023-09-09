@@ -283,9 +283,17 @@ TEST_CASE( "Benchmark alpha beta", "[!benchmark][alphabeta]" ) {
 }
 
 
-TEST_CASE( "Test MCTS", "[mcts]" ) {
+TEST_CASE( "Test alpha beta for profiling", "[.alphabetaprof]" ) {
   // A test case for profiling
-  auto agent = MCTSAgent(10, 1.4);
+  const int MIN_SCORE = -999999;
+  auto game = GameState::new_game(9);
+  auto result = alpha_beta_result(*game, 2, MIN_SCORE, MIN_SCORE, &capture_diff);
+}
+
+
+TEST_CASE( "Test MCTS", "[.mcts]" ) {
+  // A test case for profiling
+  auto agent = MCTSAgent(100, 1.4);
   auto game = GameState::new_game(9);
   auto move = agent.select_move(*game);
 }
@@ -297,4 +305,37 @@ TEST_CASE( "Benchmark MCTS", "[!benchmark][mctsbench]" ) {
   BENCHMARK("MCTS") {
     return agent.select_move(*game);
   };
+}
+
+
+TEST_CASE( "Benchmark simulate game", "[!benchmark][simgame]" ) {
+  auto game = GameState::new_game(9);
+  BENCHMARK("Simulate game") {
+    return MCTSAgent::simulate_random_game(game);
+  };
+}
+
+TEST_CASE( "Benchmark valid move", "[!benchmark][validmove]" ) {
+  auto game = GameState::new_game(9);
+  BENCHMARK("is_valid_move") {
+    return game->is_valid_move(Move::play(Point(5,5)));
+  };
+}
+
+
+TEST_CASE( "Benchmark first move", "[!benchmark][firstmove]" ) {
+  auto game = GameState::new_game(19);
+  BENCHMARK("first move") {
+    return game->apply_move(Move::play(Point(5, 5)));
+  };
+}
+
+
+TEST_CASE( "Frozenset", "[frozenset]") {
+  auto s0 = FrozenSet({1, 2, 3});
+  auto s1 = FrozenSet({1, 5});
+  auto s2 = s0 + s1;
+  auto s3 = s0 - s1;
+  REQUIRE( 4 == s2.size() );
+  REQUIRE( 2 == s3.size() );
 }

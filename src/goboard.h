@@ -4,7 +4,7 @@
 #include <cassert>
 #include <unordered_set>
 #include <unordered_map>
-// #include <map>
+#include <map>
 #include <optional>
 #include <memory>
 #include <iostream>
@@ -12,8 +12,9 @@
 #include <algorithm> // std::find
 #include "gotypes.h"
 #include "hash.h"
+#include "frozenset.h"
 
-using PointSet = std::unordered_set<Point,PointHash>;
+using FrozenPointSet = FrozenSet<Point,PointHash>;
 class GoString;
 using GridMap = std::unordered_map<Point, std::shared_ptr<GoString>, PointHash>;
 // using GridMap = std::map<Point, std::shared_ptr<GoString>>;
@@ -53,14 +54,28 @@ class GoString {
 
  public:
   Player color;
-  PointSet stones;
-  PointSet liberties;
+  FrozenPointSet stones;
+  FrozenPointSet liberties;
 
-  GoString(Player color, PointSet stones, PointSet liberties)
+  GoString(Player color, FrozenPointSet stones, FrozenPointSet liberties)
    : color{color}, stones{stones}, liberties{liberties} {}
-  void remove_liberty(const Point &point) {liberties.erase(point);}
-  void add_liberty(const Point &point) {liberties.insert(point);}
-  GoString* merged_with(GoString &go_string) const;
+  std::shared_ptr<GoString> without_liberty(Point point) {
+    auto new_liberties = liberties - FrozenPointSet({point});
+    return std::make_shared<GoString>(color, stones, new_liberties);
+  }
+  std::shared_ptr<GoString> with_liberty(Point point) {
+    auto new_liberties = liberties + FrozenPointSet({point});
+    return std::make_shared<GoString>(color, stones, new_liberties);
+  }
+
+  std::shared_ptr<GoString> merged_with(GoString &go_string) const {
+    assert(go_string.color == color);
+    auto combined_stones = stones + go_string.stones;
+    return std::make_shared<GoString>(color, combined_stones,
+                                      (liberties + go_string.liberties) - combined_stones);
+  }
+
+  
   int num_liberties() const { return liberties.size(); }
   bool operator==(GoString const& rhs) const {
     return (color == rhs.color) && (stones == rhs.stones) && (liberties == rhs.liberties);
@@ -68,12 +83,13 @@ class GoString {
 };
 
 
-GridMap deepcopy_grid(const GridMap&);
-
-
 class Board {
 private:
   uint64_t hash;
+  static std::map<std::pair<int,int>,
+                            std::unordered_map<Point, std::vector<Point>, PointHash>> neighbor_tables;
+  static void init_neighbor_table(std::pair<int,int>);
+  std::unordered_map<Point, std::vector<Point>, PointHash>* neighbor_table_ptr;
 public:
   int num_rows, num_cols;
   GridMap grid;
@@ -82,17 +98,20 @@ public:
     : num_rows{num_rows}, num_cols{num_cols}, grid(grid), hash(hash) {
     assert(num_rows <= HASH_MAX_BOARD && num_cols <= HASH_MAX_BOARD);
     // std::cout << "in board, hash: " << hasher.point_keys[0][0][0] << "\n";
+    auto dim = std::make_pair(num_rows, num_cols);
+    if (neighbor_tables.find(dim) == neighbor_tables.end())
+      init_neighbor_table(dim);
+    neighbor_table_ptr = &(neighbor_tables.find(dim)->second);
   }
 
   friend std::ostream& operator<<(std::ostream&, const Board& b);
 
+  // This is a misnomer holdover from the "slow" implementation that requires
+  // deep copies.  Current implementation uses immutable sets inside the grid
+  // map, so we don't actually need to deep copy the grid.
   BoardPtr deepcopy() {
-    return std::make_shared<Board>(num_rows, num_cols, deepcopy_grid(grid), hash);
+    return std::make_shared<Board>(num_rows, num_cols, grid, hash);
   }
-
-  // Board(const Board& b) :
-  //   num_rows(b.num_rows), num_cols(b.num_cols),
-  //   grid(deepcopy_grid(b.grid)) {}
 
   bool is_on_grid(const Point& point) const {
     return 1 <= point.row && point.row <= num_rows &&
@@ -119,7 +138,11 @@ public:
 
   uint64_t get_hash() const { return hash; }
 
+  bool is_self_capture(Player, Point);
+  bool will_capture(Player, Point);
+
  private:
+  void replace_string(std::shared_ptr<GoString> string);
   void remove_string(std::shared_ptr<GoString> string);
 
 };
