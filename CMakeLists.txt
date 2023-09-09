@@ -43,6 +43,7 @@ add_library(dlgo
   src/gtp/gtp_board.cpp
 
   src/zero/encoder.cpp
+  src/zero/agent_zero.cpp
 )
 
 target_link_libraries(dlgo "${TORCH_LIBRARIES}")
