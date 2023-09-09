@@ -283,6 +283,14 @@ TEST_CASE( "Benchmark alpha beta", "[!benchmark][alphabeta]" ) {
 }
 
 
+TEST_CASE( "Test alpha beta for profiling", "[.alphabetaprof]" ) {
+  // A test case for profiling
+  const int MIN_SCORE = -999999;
+  auto game = GameState::new_game(9);
+  auto result = alpha_beta_result(*game, 2, MIN_SCORE, MIN_SCORE, &capture_diff);
+}
+
+
 TEST_CASE( "Test MCTS", "[.mcts]" ) {
   // A test case for profiling
   auto agent = MCTSAgent(100, 1.4);
