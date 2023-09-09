@@ -47,7 +47,24 @@ class Move {
   static Move resign() {
     return Move({}, false, true);
   }
+  bool operator==(const Move& rhs) const {
+    if (is_play && rhs.is_play)
+      return point.value() == rhs.point.value();
+    else
+      return is_play == rhs.is_play && is_pass == rhs.is_pass && is_resign == rhs.is_resign;
+  }
 };
+
+class MoveHash {
+public:
+  std::size_t operator() (const Move& m) const {
+    auto hash = std::hash<bool>()(m.is_pass) ^ std::hash<bool>()(m.is_resign);
+    if (m.is_play)
+      hash ^= PointHash()(m.point.value());
+    return hash;
+  }
+};
+
 
 class GoString {
  private:
