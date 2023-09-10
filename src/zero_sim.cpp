@@ -81,4 +81,6 @@ int main(int argc, const char* argv[]) {
   std::cout << "Experience: " << black_collector->states.size() << " " <<
     black_collector->visit_counts.size() << std::endl;
   std::cout << black_collector->rewards << std::endl;
+
+  black_collector->serialize("experience.pt");
 }
