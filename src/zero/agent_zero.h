@@ -71,12 +71,21 @@ class ZeroAgent : public Agent {
   int num_rounds;
   float c_uct;
 
+  // Track number of moves, which can be used for adjusting move selection
+  // policy.
+  int move_count = 0;
+  // If True, always select moves that maximize visit count.  Otherwise, initial
+  // moves are selected in proportion to visit count.
+  bool greedy;
+  constexpr static int GREEDY_MOVE_THRESHOLD = 30;
+
 public:
   ZeroAgent(torch::jit::script::Module model,
             std::shared_ptr<Encoder> encoder,
             int num_rounds,
+            bool greedy = true,
             float c_uct = 1.5) :
-    model(model), encoder(encoder), num_rounds(num_rounds), c_uct(c_uct) {}
+    model(model), encoder(encoder), num_rounds(num_rounds), c_uct(c_uct), greedy(greedy) {}
 
   Move select_move(const GameState&);
 

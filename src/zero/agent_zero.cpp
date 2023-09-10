@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "agent_zero.h"
+#include "../myrand.h"
 
 
 ZeroNode::ZeroNode(ConstGameStatePtr game_state, float value,
@@ -43,6 +44,7 @@ float ZeroNode::expected_value(Move m) {
 
 Move ZeroAgent::select_move(const GameState& game_state) {
   // std::cout << "In select move\n";
+  ++move_count;
   auto root = create_node(std::make_shared<const GameState>(game_state));
 
   for (auto round_number=0; round_number < num_rounds; ++round_number) {
@@ -82,13 +84,26 @@ Move ZeroAgent::select_move(const GameState& game_state) {
     }
   }
 
-  // Todo: Option to select proportionally with temperature, as in AGZ paper.
-  auto max_it = std::max_element(root->branches.begin(), root->branches.end(),
-                                 [&root] (const auto& p1, const auto& p2) {
-                                   return root->visit_count(p1.first) < root->visit_count(p2.first);
-                                 });
+  if (greedy || move_count > GREEDY_MOVE_THRESHOLD) {
+      // Select the move with the highest visit count
+      auto max_it = std::max_element(root->branches.begin(), root->branches.end(),
+                                     [&root] (const auto& p1, const auto& p2) {
+                                       return root->visit_count(p1.first) < root->visit_count(p2.first);
+                                     });
 
-  return max_it->first;
+      return max_it->first;
+  }
+  else {
+    // Select move randomly in proportion to visit counts
+    std::vector<Move> moves;
+    std::vector<int> visit_counts;
+    for (const auto& [move, branch] : root->branches) {
+      moves.push_back(move);
+      visit_counts.push_back(root->visit_count(move));
+    }
+    std::discrete_distribution<> dist(visit_counts.begin(), visit_counts.end());
+    return moves[dist(rng)];
+  }
 }
 
 
