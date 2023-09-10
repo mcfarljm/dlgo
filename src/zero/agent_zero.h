@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <optional>
+#include <torch/script.h> // One-stop header.
 
 #include "encoder.h"
 #include "../agent_base.h"
@@ -18,16 +19,16 @@ public:
 };
 
 class ZeroNode {
+public:
   ConstGameStatePtr game_state;
-  float value;
   std::weak_ptr<ZeroNode> parent;
   std::optional<Move> last_move;
-  int total_visit_count = 1;
-  std::unordered_map<Move, Branch, MoveHash> branches;
   std::unordered_map<Move, std::shared_ptr<ZeroNode>, MoveHash> children;
+  std::unordered_map<Move, Branch, MoveHash> branches;
+  float value;
+  int total_visit_count = 1;
   bool terminal;
 
-public:
   ZeroNode(ConstGameStatePtr game_state, float value,
            std::unordered_map<Move, float, MoveHash> priors,
            std::weak_ptr<ZeroNode> parent = std::weak_ptr<ZeroNode>(),
@@ -48,7 +49,7 @@ public:
   //   return children.find(move)->second;
   // }
 
-  void record_visit(std::optional<Move> m, float val);
+  void record_visit(Move m, float val);
 
   float expected_value(Move m);
 
@@ -62,6 +63,28 @@ public:
       return it->second.visit_count;
     return 0;
   }
+};
+
+class ZeroAgent : public Agent {
+  torch::jit::script::Module model;
+  std::shared_ptr<Encoder> encoder;
+  int num_rounds;
+  float c_uct;
+
+public:
+  ZeroAgent(torch::jit::script::Module model,
+            std::shared_ptr<Encoder> encoder,
+            int num_rounds,
+            float c_uct = 1.5) :
+    model(model), encoder(encoder), num_rounds(num_rounds), c_uct(c_uct) {}
+
+  Move select_move(const GameState&);
+
+private:
+  std::shared_ptr<ZeroNode> create_node(ConstGameStatePtr game_state,
+                                        std::optional<Move> move = std::nullopt,
+                                        std::weak_ptr<ZeroNode> parent = std::weak_ptr<ZeroNode>());
+  Move select_branch(std::shared_ptr<ZeroNode> node);
 };
 
 #endif // AGENT_ZERO_H

@@ -24,7 +24,7 @@ FetchContent_MakeAvailable(Catch2)
 # The -P is optional but produces only the call graph, which is much easier to use.
 set( CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_DEBUG} -pg" )
 
-add_library(dlgo
+add_library(dlgo SHARED
   src/utils.cpp
   src/goboard.cpp
   src/gotypes.cpp
@@ -62,6 +62,9 @@ target_link_libraries(human_v_bot PRIVATE dlgo)
 
 add_executable(dlgobot src/gtp/gtp_main.cpp)
 target_link_libraries(dlgobot PRIVATE dlgo)
+
+add_executable(zero_sim src/zero_sim.cpp)
+target_link_libraries(zero_sim PRIVATE dlgo)
 
 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
