@@ -8,8 +8,9 @@
 
 class Encoder {
  public:
-  virtual torch::Tensor encode(const GameState&) = 0;
-  virtual Move decode_move_index(int index) = 0;
+  virtual torch::Tensor encode(const GameState&) const = 0;
+  virtual Move decode_move_index(int index) const = 0;
+  virtual int num_moves() const = 0;
 };
 
 class SimpleEncoder : public Encoder {
@@ -19,8 +20,11 @@ class SimpleEncoder : public Encoder {
  public:
   SimpleEncoder(int board_size) : board_size(board_size) {}
   
-  torch::Tensor encode(const GameState&);
-  Move decode_move_index(int index);
+  torch::Tensor encode(const GameState&) const;
+  Move decode_move_index(int index) const;
+  int num_moves() const {
+    return board_size * board_size + 1;
+  }
 };
 
 

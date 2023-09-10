@@ -12,7 +12,7 @@ using namespace torch::indexing;
 /// 8: 1 if white to move (current player gets komi)
 /// 9: 1 if black to move (opponent gets komi)
 /// 10: move would be illegal due to ko
-torch::Tensor SimpleEncoder::encode(const GameState& game_state) {
+torch::Tensor SimpleEncoder::encode(const GameState& game_state) const {
   auto board_tensor = torch::zeros({11, board_size, board_size});
   auto next_player = game_state.next_player;
 
@@ -41,7 +41,7 @@ torch::Tensor SimpleEncoder::encode(const GameState& game_state) {
   return board_tensor;
 }
 
-Move SimpleEncoder::decode_move_index(int index) {
+Move SimpleEncoder::decode_move_index(int index) const {
   if (index == board_size * board_size)
     return Move::pass();
   auto row = index / board_size;
