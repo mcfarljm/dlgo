@@ -84,6 +84,23 @@ Move ZeroAgent::select_move(const GameState& game_state) {
     }
   }
 
+  if (collector) {
+    auto root_state_tensor = encoder->encode(game_state);
+    auto visit_counts = torch::zeros(encoder->num_moves());
+    auto get_visit_count = [&](int i) {
+      auto move = encoder->decode_move_index(i);
+      auto it = root->branches.find(move);
+      if (it != root->branches.end())
+        return it->second.visit_count;
+      else
+        return 0;
+    };
+    for (auto i=0; i < encoder->num_moves(); ++i) {
+      visit_counts.index_put_({i}, static_cast<float>(get_visit_count(i)));
+    }
+    collector->record_decision(root_state_tensor, visit_counts);
+  }
+
   if (greedy || move_count > GREEDY_MOVE_THRESHOLD) {
       // Select the move with the highest visit count
       auto max_it = std::max_element(root->branches.begin(), root->branches.end(),

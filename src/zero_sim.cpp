@@ -58,13 +58,27 @@ int main(int argc, const char* argv[]) {
 
   auto encoder = std::make_shared<SimpleEncoder>(board_size);
 
+  auto black_collector = std::make_shared<ExperienceCollector>();
+  auto white_collector = std::make_shared<ExperienceCollector>();
+
   auto black_agent = std::make_unique<ZeroAgent>(model, encoder, num_rounds, false);
   auto white_agent = std::make_unique<ZeroAgent>(model, encoder, num_rounds, false);
 
+  black_agent->set_collector(black_collector);
+  white_agent->set_collector(white_collector);
+
   auto timer = Timer();
-  auto [result, num_moves] = simulate_game(board_size, black_agent.get(), white_agent.get());
+  auto [winner, num_moves] = simulate_game(board_size, black_agent.get(), white_agent.get());
   auto duration = timer.elapsed();
   std::cout << "Time: " << timer.elapsed() << std::endl;
   std::cout << "Moves per second: " << num_moves / duration << std::endl;
   std::cout << "Seconds per move: " << duration / num_moves << std::endl;
+
+  auto black_reward = winner == Player::black ? 1.0 : -1.0;
+  black_collector->complete_episode(black_reward);
+  white_collector->complete_episode(-1.0 * black_reward);
+
+  std::cout << "Experience: " << black_collector->states.size() << " " <<
+    black_collector->visit_counts.size() << std::endl;
+  std::cout << black_collector->rewards << std::endl;
 }

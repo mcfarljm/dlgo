@@ -6,6 +6,7 @@
 #include <torch/script.h> // One-stop header.
 
 #include "encoder.h"
+#include "experience.h"
 #include "../agent_base.h"
 
 class Branch {
@@ -71,6 +72,8 @@ class ZeroAgent : public Agent {
   int num_rounds;
   float c_uct;
 
+  std::shared_ptr<ExperienceCollector> collector;
+
   // Track number of moves, which can be used for adjusting move selection
   // policy.
   int move_count = 0;
@@ -92,6 +95,10 @@ public:
     model(model), encoder(encoder), num_rounds(num_rounds), c_uct(c_uct), greedy(greedy) {}
 
   Move select_move(const GameState&);
+
+  void set_collector(std::shared_ptr<ExperienceCollector> c) {
+    collector = c;
+  }
 
 private:
   std::shared_ptr<ZeroNode> create_node(ConstGameStatePtr game_state,
