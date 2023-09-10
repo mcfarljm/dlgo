@@ -12,6 +12,7 @@
 #include "alphabeta.h"
 #include "mcts.h"
 #include "zero/encoder.h"
+#include "zero/agent_zero.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
@@ -359,4 +360,30 @@ TEST_CASE( "Simple encoder", "[encoder]") {
       }
     }
   }
+}
+
+TEST_CASE( "Benchmark zero move", "[!benchmark][zeromove]" ) {
+  constexpr auto board_size = 9;
+  // Note computational cost may not scale linearly with num rounds, so this
+  // should be loosely representative of actual use.
+  constexpr auto num_rounds = 500;
+
+  c10::InferenceMode guard;
+  torch::jit::script::Module model;
+  try {
+    // Deserialize the ScriptModule from a file using torch::jit::load().
+    model = torch::jit::load("../nn/nine/conv_4x64.pt");
+  }
+  catch (const c10::Error& e) {
+    std::cerr << "error loading the model\n";
+    throw;
+  }
+
+  auto encoder = std::make_shared<SimpleEncoder>(board_size);
+  auto agent = ZeroAgent(model, encoder, num_rounds);
+
+  auto game = GameState::new_game(9);
+  BENCHMARK("Zero Move") {
+    return agent.select_move(*game);
+  };
 }
