@@ -67,11 +67,14 @@ def count_parameters(model):
 #     X = torch.rand(n, encoder_channels, grid_size, grid_size, device=device)
 #     print('shape:', X.shape)
 #     tic = time.perf_counter()
+
 #     # Individual calls:
-#     # for i in range(n):
-#     #     (policy, value) = model(X[i:i+1,:,:,:])
+#     for i in range(n):
+#         (policy, value) = model(X[i:i+1,:,:,:])
+
 #     # As a batch:
-#     (policy, value) = model(X)
+#     # (policy, value) = model(X)
+
 #     toc = time.perf_counter()
 #     print('shape:', policy.shape, value.shape)
 #     print('delta:', toc-tic, (toc - tic) / n)
