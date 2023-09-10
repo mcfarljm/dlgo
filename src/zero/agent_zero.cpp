@@ -139,7 +139,9 @@ std::shared_ptr<ZeroNode> ZeroAgent::create_node(ConstGameStatePtr game_state,
     // Todo: this is a little precarious because we obtain the noise as a vector
     // of doubles and need to convert to tensor of float32.
     auto options = torch::TensorOptions().dtype(torch::kFloat64);
-    auto noise_tensor = torch::from_blob(noise.data(), {noise.size()}, options).to(torch::kFloat32);
+    auto noise_tensor = torch::from_blob(noise.data(),
+                                         {static_cast<int64_t>(noise.size())},
+                                         options).to(torch::kFloat32);
 
     priors.multiply_(1.0 - DIRICHLET_WEIGHT);
     priors.add_(noise_tensor);
