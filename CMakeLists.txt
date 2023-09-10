@@ -67,6 +67,10 @@ add_executable(zero_sim src/zero_sim.cpp)
 target_link_libraries(zero_sim PRIVATE dlgo)
 
 
+# Don't build all exes by default
+set_target_properties(prog bot_v_bot human_v_bot dlgobot PROPERTIES EXCLUDE_FROM_ALL 1)
+
+
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
