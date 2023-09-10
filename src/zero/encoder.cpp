@@ -4,6 +4,14 @@
 
 using namespace torch::indexing;
 
+/// Simple 11-plane encoder from book
+/// Stones encoded by liberty count from perspective of current player
+///
+/// 0 - 3: Current player's stones with 1, 2, 3, 4+ liberties
+/// 4 - 7: Opponent's stones with 1, 2, 3, 4+ liberties
+/// 8: 1 if white to move (current player gets komi)
+/// 9: 1 if black to move (opponent gets komi)
+/// 10: move would be illegal due to ko
 torch::Tensor SimpleEncoder::encode(const GameState& game_state) {
   auto board_tensor = torch::zeros({11, board_size, board_size});
   auto next_player = game_state.next_player;
@@ -32,8 +40,6 @@ torch::Tensor SimpleEncoder::encode(const GameState& game_state) {
   
   return board_tensor;
 }
-
-
 
 Move SimpleEncoder::decode_move_index(int index) {
   if (index == board_size * board_size)
