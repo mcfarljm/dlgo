@@ -17,6 +17,17 @@ static std::string stone_to_char(std::optional<Player> stone) {
 }
 
 
+std::ostream& operator<<(std::ostream& os, const Move& m) {
+  if (m.is_pass)
+    os << "pass";
+  else if (m.is_resign)
+    os << "resign";
+  else
+    os << "play" << m.point.value();
+  return os;
+}
+
+
 std::ostream& operator<<(std::ostream& os, const Board& b) {
   for (auto row = b.num_rows; row > 0; row--) {
     auto pad = row <= 9 ? " " : "";

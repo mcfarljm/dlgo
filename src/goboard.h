@@ -55,6 +55,9 @@ class Move {
   }
 };
 
+std::ostream& operator<<(std::ostream& os, const Move& m);
+
+
 class MoveHash {
 public:
   std::size_t operator() (const Move& m) const {
