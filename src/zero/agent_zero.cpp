@@ -127,7 +127,26 @@ std::shared_ptr<ZeroNode> ZeroAgent::create_node(ConstGameStatePtr game_state,
   // std::cout << "priors size: " << at::numel(priors) << std::endl;
   auto value = values.item().toFloat();
 
-  // Todo: add dirichlet noise
+  // Add dirichlet noise for the root noise
+  if (! parent.lock()) {
+    // std::cout << "Ading dirichlet noise\n";
+    // std::cout << "initial prior sum: " << priors.sum() << std::endl;
+    auto dirichlet_dist = DirichletDistribution(at::numel(priors), DIRICHLET_CONCENTRATION);
+    std::vector<double> noise = dirichlet_dist.sample();
+    for (auto& x : noise)
+      x *= DIRICHLET_WEIGHT;
+
+    // Todo: this is a little precarious because we obtain the noise as a vector
+    // of doubles and need to convert to tensor of float32.
+    auto options = torch::TensorOptions().dtype(torch::kFloat64);
+    auto noise_tensor = torch::from_blob(noise.data(), {noise.size()}, options).to(torch::kFloat32);
+
+    priors.multiply_(1.0 - DIRICHLET_WEIGHT);
+    priors.add_(noise_tensor);
+    // std::cout << "new prior sum: " << priors.sum() << std::endl;
+
+    assert( priors.sum().item<float>() < 1.0001 && priors.sum().item<float>() > 0.99999);
+  }
 
   std::unordered_map<Move, float, MoveHash> move_priors;
   for (auto i=0; i<at::numel(priors); ++i) {

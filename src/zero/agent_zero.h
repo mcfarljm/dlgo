@@ -79,6 +79,10 @@ class ZeroAgent : public Agent {
   bool greedy;
   constexpr static int GREEDY_MOVE_THRESHOLD = 30;
 
+  // Concentration parameter for dirichlet noise:
+  constexpr static double DIRICHLET_CONCENTRATION = 0.03;
+  constexpr static float DIRICHLET_WEIGHT = 0.25;
+
 public:
   ZeroAgent(torch::jit::script::Module model,
             std::shared_ptr<Encoder> encoder,
