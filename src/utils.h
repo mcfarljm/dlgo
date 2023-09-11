@@ -11,7 +11,6 @@
 
 std::string lowercase(const std::string& s);
 
-void print_board(const Board& b);
 void print_move(Player, Move);
 Point point_from_coords(std::string);
 
