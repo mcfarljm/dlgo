@@ -32,6 +32,7 @@ add_library(dlgo SHARED
   src/agent_naive.cpp
   src/myrand.cpp
 
+  src/simulation.cpp
   src/eval.cpp
   src/scoring.cpp
   src/alphabeta.cpp
