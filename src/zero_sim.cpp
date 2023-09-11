@@ -82,5 +82,6 @@ int main(int argc, const char* argv[]) {
     black_collector->visit_counts.size() << std::endl;
   std::cout << black_collector->rewards << std::endl;
 
+  black_collector->append(*white_collector);
   black_collector->serialize("experience.pt");
 }

@@ -38,8 +38,12 @@ public:
     current_episode_visit_counts.clear();
   }
 
-  // Instead of using experience buffer, simpler to add a combine_experience
-  // method here.
+  /// Append data from other.
+  void append(const ExperienceCollector& other) {
+    states.insert(states.end(), other.states.begin(), other.states.end());
+    visit_counts.insert(visit_counts.end(), other.visit_counts.begin(), other.visit_counts.end());
+    rewards.insert(rewards.end(), other.rewards.begin(), other.rewards.end());
+  }
 
   void serialize(const std::string path) {
     auto states_tensor = torch::cat(states);
