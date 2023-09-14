@@ -3,6 +3,7 @@
 #include <thread>
 #include <string>
 #include <array>
+#include <filesystem>
 
 #include <cxxopts.hpp>
 
@@ -21,6 +22,7 @@ int main(int argc, const char* argv[]) {
 
   options.add_options()
     ("network", "Path to pytorch script file", cxxopts::value<std::string>())
+    ("o,output-path", "Directory to store output", cxxopts::value<std::string>()->default_value("experience"))
     ("r,rounds", "Number of rounds", cxxopts::value<int>()->default_value("800"))
     ("v,verbosity", "Verbosity level", cxxopts::value<int>()->default_value("1"))
     ("t,num-threads", "Number of pytorch threads", cxxopts::value<int>())
@@ -51,6 +53,12 @@ int main(int argc, const char* argv[]) {
 
   auto num_rounds = args["rounds"].as<int>();
   auto verbosity = args["verbosity"].as<int>();
+  auto output_path = args["output-path"].as<std::string>();
+
+  if (std::filesystem::exists(output_path) && ! std::filesystem::is_directory(output_path)) {
+    std::cerr << "output path exists and is not a directory: " + output_path << std::endl;
+    exit(1);
+  }
     
   if (args.count("num-threads")) {
     std::cout << "setting " << args["num-threads"].as<int>() << " pytorch threads" << std::endl;
@@ -97,5 +105,5 @@ int main(int argc, const char* argv[]) {
   std::cout << black_collector->rewards << std::endl;
 
   black_collector->append(*white_collector);
-  black_collector->serialize_binary("experience");
+  black_collector->serialize_binary(output_path);
 }
