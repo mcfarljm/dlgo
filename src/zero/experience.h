@@ -39,26 +39,18 @@ public:
   }
 
   /// Append data from other.
-  void append(const ExperienceCollector& other) {
+  // Todo: could consider using a std::make_move_iterator and moving the data
+  // from other.  Not sure how much difference it would make, as the Tensors
+  // being moved seem to be smart pointers.
+  void append(ExperienceCollector& other) {
     states.insert(states.end(), other.states.begin(), other.states.end());
     visit_counts.insert(visit_counts.end(), other.visit_counts.begin(), other.visit_counts.end());
     rewards.insert(rewards.end(), other.rewards.begin(), other.rewards.end());
   }
 
-  void serialize(const std::string path) {
-    auto states_tensor = torch::cat(states);
-    auto visit_counts_tensor = torch::cat(visit_counts);
+  void serialize_binary(const std::string path);
 
-    auto rewards_tensor = torch::from_blob(rewards.data(),
-                                           {static_cast<int64_t>(rewards.size())}).to(torch::kFloat32);
-
-    auto tensors = torch::TensorList({states_tensor, visit_counts_tensor, rewards_tensor});
-
-    auto bytes = torch::pickle_save(tensors);
-    std::ofstream fout(path, std::ios::out | std::ios::binary);
-    fout.write(bytes.data(), bytes.size());
-    fout.close();
-  }
+  void serialize_pickle(const std::string path);
 
 };
 

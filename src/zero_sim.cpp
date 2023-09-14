@@ -62,5 +62,5 @@ int main(int argc, const char* argv[]) {
   std::cout << black_collector->rewards << std::endl;
 
   black_collector->append(*white_collector);
-  black_collector->serialize("experience.pt");
+  black_collector->serialize_binary("experience");
 }

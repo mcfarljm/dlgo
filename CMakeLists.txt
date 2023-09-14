@@ -43,6 +43,7 @@ add_library(dlgo SHARED
   src/gtp/frontend.h
   src/gtp/gtp_board.cpp
 
+  src/zero/experience.cpp
   src/zero/encoder.cpp
   src/zero/agent_zero.cpp
 )
