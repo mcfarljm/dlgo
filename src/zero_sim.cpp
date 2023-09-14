@@ -4,6 +4,8 @@
 #include <string>
 #include <array>
 
+#include <cxxopts.hpp>
+
 #include "goboard.h"
 #include "zero/agent_zero.h"
 #include "utils.h"
@@ -11,22 +13,55 @@
 #include "simulation.h"
 
 
-
 int main(int argc, const char* argv[]) {
-  constexpr auto board_size = 9;
-  constexpr auto num_rounds = 800;
-  constexpr auto verbosity = 3;
 
-  if (argc != 2) {
-    std::cerr << "usage: prog <path-to-exported-script-module>\n";
-    return -1;
+  constexpr auto board_size = 9;
+
+  cxxopts::Options options("zero_sim", "Simulate games using zero agent");
+
+  options.add_options()
+    ("network", "Path to pytorch script file", cxxopts::value<std::string>())
+    ("r,rounds", "Number of rounds", cxxopts::value<int>()->default_value("800"))
+    ("v,verbosity", "Verbosity level", cxxopts::value<int>()->default_value("1"))
+    ("t,num-threads", "Number of pytorch threads", cxxopts::value<int>())
+    ("h,help", "Print usage")
+    ;
+
+  options.parse_positional({"network"});
+  options.positional_help("<network_file>");
+
+  cxxopts::ParseResult args;
+  try {
+    args = options.parse(argc, argv);
+  }
+  catch (const cxxopts::exceptions::exception& e) {
+    std::cout << options.help() << std::endl;
+    exit(1);
+  }
+
+  if (args.count("help")) {
+    std::cout << options.help() << std::endl;
+    exit(0);
+  }
+
+  if (! args.count("network")) {
+    std::cout << options.help() << std::endl;
+    exit(1);
+  }
+
+  auto num_rounds = args["rounds"].as<int>();
+  auto verbosity = args["verbosity"].as<int>();
+    
+  if (args.count("num-threads")) {
+    std::cout << "setting " << args["num-threads"].as<int>() << " pytorch threads" << std::endl;
+    at::set_num_threads(args["num-threads"].as<int>());
   }
 
   c10::InferenceMode guard;
   torch::jit::script::Module model;
   try {
     // Deserialize the ScriptModule from a file using torch::jit::load().
-    model = torch::jit::load(argv[1]);
+    model = torch::jit::load(args["network"].as<std::string>());
   }
   catch (const c10::Error& e) {
     std::cerr << "error loading the model\n";

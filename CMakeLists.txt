@@ -16,6 +16,14 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
+FetchContent_Declare(
+  cxxopts
+  GIT_REPOSITORY https://github.com/jarro2783/cxxopts
+  GIT_TAG        v3.1.1
+)
+
+FetchContent_MakeAvailable(cxxopts)
+
 
 # To use:
 # - compile in new dir: cmake .. -DCMAKE_BUILD_TYPE=PROFILE
@@ -63,7 +71,7 @@ add_executable(dlgobot src/gtp/gtp_main.cpp)
 target_link_libraries(dlgobot PRIVATE dlgo)
 
 add_executable(zero_sim src/zero_sim.cpp)
-target_link_libraries(zero_sim PRIVATE dlgo)
+target_link_libraries(zero_sim PRIVATE dlgo cxxopts)
 
 
 # Don't build all exes by default
