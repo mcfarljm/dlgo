@@ -51,20 +51,20 @@ namespace {
 }
 
 
-void ExperienceCollector::serialize_binary(const std::string path) {
-  if (std::filesystem::exists(path)) {
-    if (! std::filesystem::is_directory(path))
-      throw std::runtime_error("path exists and is not a directory: " + path);
+void ExperienceCollector::serialize_binary(const std::string directory, const std::string label) {
+  if (std::filesystem::exists(directory)) {
+    if (! std::filesystem::is_directory(directory))
+      throw std::runtime_error("path exists and is not a directory: " + directory);
   }
   else
-    std::filesystem::create_directory(path);
+    std::filesystem::create_directory(directory);
   
   auto states_tensor = torch::cat(states);
   auto visit_counts_tensor = torch::cat(visit_counts);
   auto rewards_tensor = torch::from_blob(rewards.data(),
                                          {static_cast<int64_t>(rewards.size())}).to(torch::kFloat32);
 
-  serialize_tensor(states_tensor, path, "states");
-  serialize_tensor(visit_counts_tensor, path, "visit_counts");
-  serialize_tensor(rewards_tensor, path, "rewards");
+  serialize_tensor(states_tensor, directory, "states" + label);
+  serialize_tensor(visit_counts_tensor, directory, "visit_counts" + label);
+  serialize_tensor(rewards_tensor, directory, "rewards" + label);
 }

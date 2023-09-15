@@ -22,6 +22,7 @@ int main(int argc, const char* argv[]) {
   options.add_options()
     ("network", "Path to pytorch script file", cxxopts::value<std::string>())
     ("o,output-path", "Directory to store output", cxxopts::value<std::string>()->default_value("experience"))
+    ("l,label", "Label to use within experience directory", cxxopts::value<std::string>()->default_value(""))
     ("r,rounds", "Number of rounds", cxxopts::value<int>()->default_value("800"))
     ("g,num-games", "Number of games", cxxopts::value<int>()->default_value("1"))
     ("b,board-size", "Board size", cxxopts::value<int>()->default_value("9"))
@@ -57,6 +58,8 @@ int main(int argc, const char* argv[]) {
   auto board_size = args["board-size"].as<int>();
   auto verbosity = args["verbosity"].as<int>();
   auto output_path = args["output-path"].as<std::string>();
+  std::string experience_label(args["label"].as<std::string>());
+  if (experience_label.size()) experience_label.insert(0, "_");
 
   if (std::filesystem::exists(output_path) && ! std::filesystem::is_directory(output_path)) {
     std::cerr << "output path exists and is not a directory: " + output_path << std::endl;
@@ -117,5 +120,5 @@ int main(int argc, const char* argv[]) {
   }
 
   black_collector->append(*white_collector);
-  black_collector->serialize_binary(output_path);
+  black_collector->serialize_binary(output_path, experience_label);
 }

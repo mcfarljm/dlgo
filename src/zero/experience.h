@@ -48,9 +48,11 @@ public:
     rewards.insert(rewards.end(), other.rewards.begin(), other.rewards.end());
   }
 
-  void serialize_binary(const std::string path);
 
   void serialize_pickle(const std::string path);
+
+  void serialize_binary(const std::string directory, const std::string label);
+
 
 };
 
