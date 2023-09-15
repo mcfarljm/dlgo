@@ -25,6 +25,7 @@ int main(int argc, const char* argv[]) {
     ("l,label", "Label to use within experience directory", cxxopts::value<std::string>()->default_value(""))
     ("r,rounds", "Number of rounds", cxxopts::value<int>()->default_value("800"))
     ("g,num-games", "Number of games", cxxopts::value<int>()->default_value("1"))
+    ("e,save-every", "Interval at which to save experience", cxxopts::value<int>()->default_value("100"))
     ("b,board-size", "Board size", cxxopts::value<int>()->default_value("9"))
     ("v,verbosity", "Verbosity level", cxxopts::value<int>()->default_value("0"))
     ("t,num-threads", "Number of pytorch threads", cxxopts::value<int>())
@@ -55,6 +56,7 @@ int main(int argc, const char* argv[]) {
 
   auto num_rounds = args["rounds"].as<int>();
   auto num_games = args["num-games"].as<int>();
+  auto save_interval = args["save-every"].as<int>();
   auto board_size = args["board-size"].as<int>();
   auto verbosity = args["verbosity"].as<int>();
   auto output_path = args["output-path"].as<std::string>();
@@ -96,6 +98,7 @@ int main(int argc, const char* argv[]) {
   white_agent->set_collector(white_collector);
 
   int num_black_wins = 0;
+  int save_counter = 0;
   auto cumulative_timer = Timer();
   for (int game_num=0; game_num < num_games; ++game_num) {
     auto timer = Timer();
@@ -117,6 +120,14 @@ int main(int argc, const char* argv[]) {
     if (winner == Player::black) ++num_black_wins;
     black_collector->complete_episode(black_reward);
     white_collector->complete_episode(-1.0 * black_reward);
+
+    if ((game_num + 1) % save_interval == 0) {
+      black_collector->append(*white_collector);
+      black_collector->serialize_binary(output_path, experience_label + "_" + std::to_string(save_counter));
+      black_collector->reset();
+      white_collector->reset();
+      ++save_counter;
+    }
   }
 
   black_collector->append(*white_collector);

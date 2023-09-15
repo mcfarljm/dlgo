@@ -53,6 +53,16 @@ public:
 
   void serialize_binary(const std::string directory, const std::string label);
 
+  void reset() {
+    states.clear();
+    visit_counts.clear();
+    rewards.clear();
+
+    // Should be redundant if complete_episode has been called...
+    current_episode_states.clear();
+    current_episode_visit_counts.clear();
+  }
+
 
 };
 

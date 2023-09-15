@@ -52,6 +52,9 @@ namespace {
 
 
 void ExperienceCollector::serialize_binary(const std::string directory, const std::string label) {
+  if (! states.size())
+    return;
+
   if (std::filesystem::exists(directory)) {
     if (! std::filesystem::is_directory(directory))
       throw std::runtime_error("path exists and is not a directory: " + directory);
