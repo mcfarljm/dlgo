@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <chrono>
 #include <thread>
 #include <string>
@@ -16,15 +17,15 @@
 
 int main(int argc, const char* argv[]) {
 
-  constexpr auto board_size = 9;
-
   cxxopts::Options options("zero_sim", "Simulate games using zero agent");
 
   options.add_options()
     ("network", "Path to pytorch script file", cxxopts::value<std::string>())
     ("o,output-path", "Directory to store output", cxxopts::value<std::string>()->default_value("experience"))
     ("r,rounds", "Number of rounds", cxxopts::value<int>()->default_value("800"))
-    ("v,verbosity", "Verbosity level", cxxopts::value<int>()->default_value("1"))
+    ("g,num-games", "Number of games", cxxopts::value<int>()->default_value("1"))
+    ("b,board-size", "Board size", cxxopts::value<int>()->default_value("9"))
+    ("v,verbosity", "Verbosity level", cxxopts::value<int>()->default_value("0"))
     ("t,num-threads", "Number of pytorch threads", cxxopts::value<int>())
     ("h,help", "Print usage")
     ;
@@ -52,6 +53,8 @@ int main(int argc, const char* argv[]) {
   }
 
   auto num_rounds = args["rounds"].as<int>();
+  auto num_games = args["num-games"].as<int>();
+  auto board_size = args["board-size"].as<int>();
   auto verbosity = args["verbosity"].as<int>();
   auto output_path = args["output-path"].as<std::string>();
 
@@ -89,20 +92,29 @@ int main(int argc, const char* argv[]) {
   black_agent->set_collector(black_collector);
   white_agent->set_collector(white_collector);
 
-  auto timer = Timer();
-  auto [winner, num_moves] = simulate_game(board_size, black_agent.get(), white_agent.get(), verbosity);
-  auto duration = timer.elapsed();
-  std::cout << "Time: " << timer.elapsed() << std::endl;
-  std::cout << "Moves per second: " << num_moves / duration << std::endl;
-  std::cout << "Seconds per move: " << duration / num_moves << std::endl;
+  int num_black_wins = 0;
+  auto cumulative_timer = Timer();
+  for (int game_num=0; game_num < num_games; ++game_num) {
+    auto timer = Timer();
+    auto [winner, num_moves] = simulate_game(board_size, black_agent.get(), white_agent.get(), verbosity);
+    auto duration = timer.elapsed();
+    if (num_games <= 5) {
+      std::cout << "Game: " << num_moves << " moves in " << duration;
+      std:: cout << " s (" << num_moves / duration << " mv/s, " << duration / num_moves << " s/mv)" << std::endl;
+    }
 
-  auto black_reward = winner == Player::black ? 1.0 : -1.0;
-  black_collector->complete_episode(black_reward);
-  white_collector->complete_episode(-1.0 * black_reward);
+    auto total_duration = cumulative_timer.elapsed();
+    auto games_per_sec = (game_num + 1) / total_duration;
+    auto remaining_sec = (num_games - game_num - 1) / games_per_sec;
+    std::cout << num_black_wins << "/" << game_num + 1 << "/" << num_games;
+    std::cout << std::fixed << std::setprecision(1) << " (" << 100.0 * num_black_wins / (game_num + 1) << "% Blk)";
+    std::cout << "  [" << format_seconds(total_duration) << " < " << format_seconds(remaining_sec) << "]" << std::endl;
 
-  std::cout << "Experience: " << black_collector->states.size() << " " <<
-    black_collector->visit_counts.size() << std::endl;
-  std::cout << black_collector->rewards << std::endl;
+    auto black_reward = winner == Player::black ? 1.0 : -1.0;
+    if (winner == Player::black) ++num_black_wins;
+    black_collector->complete_episode(black_reward);
+    white_collector->complete_episode(-1.0 * black_reward);
+  }
 
   black_collector->append(*white_collector);
   black_collector->serialize_binary(output_path);

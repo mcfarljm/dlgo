@@ -37,5 +37,7 @@ private:
   std::chrono::time_point<clock_> beg_;
 };
 
+std::string format_seconds(double);
+
 
 #endif // UTILS_H
