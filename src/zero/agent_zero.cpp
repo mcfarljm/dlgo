@@ -3,6 +3,7 @@
 
 #include "agent_zero.h"
 #include "../myrand.h"
+#include "dihedral.h"
 
 
 ZeroNode::ZeroNode(ConstGameStatePtr game_state, float value,
@@ -131,6 +132,7 @@ std::shared_ptr<ZeroNode> ZeroAgent::create_node(ConstGameStatePtr game_state,
 
   // Note: also want to place this prior to loading jit model as well
   c10::InferenceMode guard;
+  auto transform = Dihedral();
   
   auto state_tensor = encoder->encode(*game_state);
   std::vector<torch::jit::IValue> input({state_tensor});

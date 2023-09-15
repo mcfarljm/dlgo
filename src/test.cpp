@@ -13,6 +13,7 @@
 #include "mcts.h"
 #include "zero/encoder.h"
 #include "zero/agent_zero.h"
+#include "zero/dihedral.h"
 
 TEST_CASE( "Check colors", "[colors]" ) {
 
@@ -386,4 +387,22 @@ TEST_CASE( "Benchmark zero move", "[!benchmark][zeromove]" ) {
   BENCHMARK("Zero Move") {
     return agent.select_move(*game);
   };
+}
+
+
+TEST_CASE( "Dihedral transformations", "[dihedral]" ) {
+  torch::Tensor x = torch::reshape(torch::arange(0, 8), {2, 2, 2});
+  std::cout << x << std::endl;
+  auto null_transform = Dihedral(0, false);
+
+  REQUIRE( torch::equal(null_transform.forward(x), x) );
+  REQUIRE( torch::equal(null_transform.inverse(x), x) );
+
+  auto trans = Dihedral(1, true);
+  REQUIRE( torch::equal(trans.inverse(trans.forward(x)), x) );
+  std::cout << trans.forward(x) << std::endl;
+
+  auto rand = Dihedral();
+  REQUIRE( torch::equal(rand.inverse(rand.forward(x)), x) );
+
 }
