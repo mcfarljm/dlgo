@@ -8,14 +8,13 @@ def cross_entropy_loss_fn(policies, visit_counts):
     search_probs = visit_counts / visit_counts.sum(1, keepdims=True)
     assert search_probs[0].sum() > 0.999 and search_probs[0].sum() < 1.001
 
-    return -(search_probs * torch.log(policies)).sum()
+    # We divide by the number of rows (examples) to get a mean of the
+    # cross-entropy loss.
+    return -(search_probs * torch.log(policies)).sum() / len(search_probs)
 
 
 def train(dataloader, model, optimizer):
-    # The papers are a little bit unclear, mentioning MSE but showing SSE in the
-    # equation.  From what I can tell, SSE seems much more comparable to
-    # cross-entropy loss.
-    sse_loss_fn = torch.nn.MSELoss(reduction='sum')
+    mse_loss_fn = torch.nn.MSELoss()
     size = len(dataloader.dataset)
     model.train()
     for batch_num, (states, rewards, visit_counts) in enumerate(dataloader):
@@ -23,10 +22,10 @@ def train(dataloader, model, optimizer):
         # Compute prediction error
         policies, values = model(states)
 
-        sse_loss = sse_loss_fn(values.squeeze(), rewards)
+        mse_loss = mse_loss_fn(values.squeeze(), rewards)
         cross_entropy_loss = cross_entropy_loss_fn(policies, visit_counts)
 
-        loss = sse_loss + cross_entropy_loss
+        loss = mse_loss + cross_entropy_loss
 
         # Backpropagation
         loss.backward()
@@ -35,8 +34,8 @@ def train(dataloader, model, optimizer):
 
         if batch_num % 2 == 0:
             loss, current = loss.item(), (batch_num + 1) * len(states)
-            sse_loss, ce_loss = sse_loss.item(), cross_entropy_loss.item()
-            print(f"loss: {loss:>7f} ({sse_loss:>3f}, {ce_loss:>3f})  [{current:>5d}/{size:>5d}]")
+            mse_loss, ce_loss = mse_loss.item(), cross_entropy_loss.item()
+            print(f"loss: {loss:>7f} ({mse_loss:>3f}, {ce_loss:>3f})  [{current:>5d}/{size:>5d}]")
 
 
 if __name__ == '__main__':
@@ -53,8 +52,8 @@ if __name__ == '__main__':
     dataloader = DataLoader(dataset, 256)
 
     optimizer = torch.optim.SGD(model.parameters(),
-                                # Paper starts wtih 1e-2, but seems too large
-                                lr=1e-3,
+                                # Paper starts with 1e-2
+                                lr=1e-2,
                                 momentum=0.9,
                                 weight_decay=1e-4)
 
