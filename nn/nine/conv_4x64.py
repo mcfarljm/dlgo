@@ -92,6 +92,7 @@ with torch.no_grad():
     model = GoNet(in_channels=encoder_channels, grid_size=grid_size)
     model.eval()
 
+    torch.save(model.state_dict(), "conv_4x64.pt")
     X = torch.rand(1, encoder_channels, grid_size, grid_size, device=device)
     traced_script_module = torch.jit.trace(model, X)
-    traced_script_module.save("conv_4x64.pt")
+    traced_script_module.save("conv_4x64_script.pt")
