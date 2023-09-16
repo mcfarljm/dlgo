@@ -21,7 +21,7 @@ int main(int argc, const char* argv[]) {
 
   options.add_options()
     ("network", "Path to pytorch script file", cxxopts::value<std::string>())
-    ("o,output-path", "Directory to store output", cxxopts::value<std::string>()->default_value("experience"))
+    ("o,output-path", "Directory to store output", cxxopts::value<std::string>())
     ("l,label", "Label to use within experience directory", cxxopts::value<std::string>()->default_value(""))
     ("r,rounds", "Number of rounds", cxxopts::value<int>()->default_value("800"))
     ("g,num-games", "Number of games", cxxopts::value<int>()->default_value("1"))
@@ -54,18 +54,32 @@ int main(int argc, const char* argv[]) {
     exit(1);
   }
 
+  std::string output_path;
+  bool store_experience = false;
+
   auto num_rounds = args["rounds"].as<int>();
   auto num_games = args["num-games"].as<int>();
   auto save_interval = args["save-every"].as<int>();
   auto board_size = args["board-size"].as<int>();
   auto verbosity = args["verbosity"].as<int>();
-  auto output_path = args["output-path"].as<std::string>();
+  if (args.count("output-path")) {
+    output_path = args["output-path"].as<std::string>();
+    store_experience = true;
+  }
   std::string experience_label(args["label"].as<std::string>());
-  if (experience_label.size()) experience_label.insert(0, "_");
+  if (experience_label.size()) {
+    if (! store_experience) {
+      std::cerr << "Error, experience label passed without output path" << std::endl;
+      exit(1);
+    }
+    experience_label.insert(0, "_");
+  }
 
-  if (std::filesystem::exists(output_path) && ! std::filesystem::is_directory(output_path)) {
-    std::cerr << "output path exists and is not a directory: " + output_path << std::endl;
-    exit(1);
+  if (store_experience) {
+    if (std::filesystem::exists(output_path) && ! std::filesystem::is_directory(output_path)) {
+      std::cerr << "output path exists and is not a directory: " + output_path << std::endl;
+      exit(1);
+    }
   }
     
   if (args.count("num-threads")) {
@@ -121,7 +135,7 @@ int main(int argc, const char* argv[]) {
     black_collector->complete_episode(black_reward);
     white_collector->complete_episode(-1.0 * black_reward);
 
-    if ((game_num + 1) % save_interval == 0) {
+    if (store_experience && (game_num + 1) % save_interval == 0) {
       black_collector->append(*white_collector);
       black_collector->serialize_binary(output_path, experience_label + "_" + std::to_string(save_counter));
       black_collector->reset();
@@ -130,6 +144,8 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  black_collector->append(*white_collector);
-  black_collector->serialize_binary(output_path, experience_label);
+  if (store_experience) {
+    black_collector->append(*white_collector);
+    black_collector->serialize_binary(output_path, experience_label);
+  }
 }
