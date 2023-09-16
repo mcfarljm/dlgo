@@ -73,6 +73,9 @@ target_link_libraries(dlgobot PRIVATE dlgo)
 add_executable(zero_sim src/zero_sim.cpp)
 target_link_libraries(zero_sim PRIVATE dlgo cxxopts)
 
+add_executable(matchup src/matchup.cpp)
+target_link_libraries(matchup PRIVATE dlgo cxxopts)
+
 
 # Don't build all exes by default
 set_target_properties(bot_v_bot human_v_bot dlgobot PROPERTIES EXCLUDE_FROM_ALL 1)
