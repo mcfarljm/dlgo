@@ -11,20 +11,25 @@ class GoNet(nn.Module):
         super().__init__()
         self.pb = nn.Sequential(
             nn.Conv2d(in_channels, 64, 3, padding='same'),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
 
             nn.Conv2d(64, 64, 3, padding='same'),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
 
             nn.Conv2d(64, 64, 3, padding='same'),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
 
             nn.Conv2d(64, 64, 3, padding='same'),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
         )
 
         self.policy_stack = nn.Sequential(
             nn.Conv2d(64, 2, 1),
+            nn.BatchNorm2d(2),
             nn.ReLU(),
 
             nn.Flatten(),
@@ -34,6 +39,7 @@ class GoNet(nn.Module):
 
         self.value_stack = nn.Sequential(
             nn.Conv2d(64, 1, 1),
+            nn.BatchNorm2d(1),
             nn.ReLU(),
 
             nn.Flatten(),
@@ -84,6 +90,7 @@ with torch.no_grad():
     grid_size = 9
     encoder_channels = 11
     model = GoNet(in_channels=encoder_channels, grid_size=grid_size)
+    model.eval()
 
     X = torch.rand(1, encoder_channels, grid_size, grid_size, device=device)
     traced_script_module = torch.jit.trace(model, X)
