@@ -132,15 +132,24 @@ std::shared_ptr<ZeroNode> ZeroAgent::create_node(ConstGameStatePtr game_state,
 
   // Note: also want to place this prior to loading jit model as well
   c10::InferenceMode guard;
+
   auto transform = Dihedral();
-  
   auto state_tensor = encoder->encode(*game_state);
-  std::vector<torch::jit::IValue> input({state_tensor});
-  // Todo: verify that unsqueeze_ really works in place
+  // Random rotation or reflection:
+  state_tensor = transform.forward(state_tensor);
   state_tensor.unsqueeze_(0);
+
+  std::vector<torch::jit::IValue> input({state_tensor});
   auto output = model.forward(input);
-  auto priors = output.toTuple()->elements()[0].toTensor();
+  auto priors = output.toTuple()->elements()[0].toTensor(); // Shape: (1, num_moves)
   auto values = output.toTuple()->elements()[1].toTensor();
+
+  // std::cout << "priors before transform: " << priors << std::endl;
+  // std::cout << "priors before transform: " << priors.index({0, torch::indexing::Slice(0, 6)}) << std::endl;
+  // Apply reverse transformation to the priors tensor.
+  priors = encoder->untransform_policy(priors, transform);
+  // std::cout << "priors after transform: " << priors << std::endl;
+
   values.squeeze_();
   priors.squeeze_();
   // std::cout << "priors size: " << at::numel(priors) << std::endl;

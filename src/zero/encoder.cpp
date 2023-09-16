@@ -48,3 +48,14 @@ Move SimpleEncoder::decode_move_index(int index) const {
   auto col = index % board_size;
   return Move::play(Point(row+1, col+1));
 }
+
+
+torch::Tensor SimpleEncoder::untransform_policy(const torch::Tensor policy, const Dihedral dihedral) const {
+  assert(policy.dim() == 2);
+  auto board_moves = policy.index({Slice(), Slice(0, -1)});
+  assert(torch::numel(board_moves) == board_size * board_size);
+  board_moves = board_moves.reshape({1, board_size, board_size});
+  board_moves = dihedral.inverse(board_moves).reshape({1, board_size * board_size});
+  // Now add back the pass element to the end
+  return torch::cat({board_moves, policy.index({Slice(), Slice(-1, None)})}, 1);
+}
