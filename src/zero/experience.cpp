@@ -25,6 +25,21 @@ namespace {
     std::ofstream fout(json_path, std::ios::out);
     auto dim = tensor.dim();
     fout << "{\n  \"data\": \"" << name << ".dat" << "\",\n";
+
+    fout << "  \"dtype\": \"";
+    auto dtype = tensor.dtype();
+    if (dtype == torch::kFloat32)
+      fout << "float32";
+    else if (dtype == torch::kInt8)
+      fout << "int8";
+    else if (dtype == torch::kInt16)
+      fout << "int16";
+    else if (dtype == torch::kInt32)
+      fout << "int32";
+    else
+      throw std::runtime_error("unexpected tensor dtype");
+    fout << "\",\n";
+
     fout << "  \"shape\": [";
     for (auto i=0; i<dim; ++i) {
       fout << tensor.size(i);
@@ -39,7 +54,8 @@ namespace {
       if (i+1 < dim)
         fout << ", ";
     }
-    fout << "],\n";
+    // Note: no trailing comma for pure json compatibility
+    fout << "]\n";
     fout << "}\n";
   
     fout.close();
