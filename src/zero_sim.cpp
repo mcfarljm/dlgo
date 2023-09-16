@@ -113,11 +113,13 @@ int main(int argc, const char* argv[]) {
 
   int num_black_wins = 0;
   int save_counter = 0;
+  int total_num_moves = 0;
   auto cumulative_timer = Timer();
   for (int game_num=0; game_num < num_games; ++game_num) {
     auto timer = Timer();
     auto [winner, num_moves] = simulate_game(board_size, black_agent.get(), white_agent.get(), verbosity);
     auto duration = timer.elapsed();
+    total_num_moves += num_moves;
     if (num_games <= 5) {
       std::cout << "Game: " << num_moves << " moves in " << duration;
       std:: cout << " s (" << num_moves / duration << " mv/s, " << duration / num_moves << " s/mv)" << std::endl;
@@ -143,6 +145,8 @@ int main(int argc, const char* argv[]) {
       ++save_counter;
     }
   }
+
+  std::cout << "Finished: " << total_num_moves << " moves at " << std::setprecision(2) << total_num_moves / cumulative_timer.elapsed() << " moves / second" << std::endl;
 
   if (store_experience) {
     black_collector->append(*white_collector);
