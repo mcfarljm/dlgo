@@ -130,8 +130,10 @@ int main(int argc, const char* argv[]) {
     auto total_duration = cumulative_timer.elapsed();
     auto games_per_sec = (game_num + 1) / total_duration;
     auto remaining_sec = (num_games - game_num - 1) / games_per_sec;
-    std::cout << num_black_wins << "/" << game_num + 1 << "/" << num_games;
+    std::cout << game_num + 1 << "/" << num_games;
     std::cout << std::fixed << std::setprecision(1) << " (" << 100.0 * num_black_wins / (game_num + 1) << "% Blk)";
+    std::cout << ", " << total_num_moves / (game_num + 1) << " mpg";
+    std::cout << ", " << total_num_moves / total_duration << " mps";
     std::cout << "  [" << format_seconds(total_duration) << " < " << format_seconds(remaining_sec) << "]" << std::endl;
 
     auto black_reward = winner == Player::black ? 1.0 : -1.0;
