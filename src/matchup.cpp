@@ -150,12 +150,14 @@ int main(int argc, const char* argv[]) {
     auto games_per_sec = (game_num + 1) / total_duration;
     auto remaining_sec = (num_games - game_num - 1) / games_per_sec;
     std::cout << agent1_wins << "/" << game_num + 1 << "/" << num_games;
-    std::cout << std::fixed << std::setprecision(1) << " (" << 100.0 * agent1_wins / (game_num + 1) << "%";
+    std::cout << std::fixed << std::setprecision(1);
+    std::cout << " (" << 100.0 * agent1_wins / (game_num + 1) << "%";
     std::cout << ", " << 100.0 * agent1_wins_as_black / agent1_num_black_games << "% as Blk)";
+    std::cout << ", " << total_num_moves / (game_num + 1) << " mpg";
+    std::cout << std::defaultfloat << std::setprecision(4);
+    std::cout << ", " << total_num_moves / total_duration << " mps";
     std::cout << "  [" << format_seconds(total_duration) << " < " << format_seconds(remaining_sec) << "]" << std::endl;
 
   }
-
-  std::cout << "Finished: " << total_num_moves << " moves at " << std::setprecision(2) << total_num_moves / cumulative_timer.elapsed() << " moves / second" << std::endl;
 
 }
