@@ -1,5 +1,8 @@
+import os
+
 import torch
 from torch.utils.data import DataLoader
+import click
 
 from data import ExperienceSubset
 
@@ -13,7 +16,7 @@ def cross_entropy_loss_fn(policies, visit_counts):
     return -(search_probs * torch.log(policies)).sum() / len(search_probs)
 
 
-def train(dataloader, model, optimizer):
+def train(dataloader, model, optimizer, output_interval):
     mse_loss_fn = torch.nn.MSELoss()
     size = len(dataloader.dataset)
     model.train()
@@ -32,29 +35,53 @@ def train(dataloader, model, optimizer):
         optimizer.step()
         optimizer.zero_grad()
 
-        if batch_num % 2 == 0:
+        if batch_num % output_interval == 0:
             loss, current = loss.item(), (batch_num + 1) * len(states)
             mse_loss, ce_loss = mse_loss.item(), cross_entropy_loss.item()
             print(f"loss: {loss:>7f} ({mse_loss:>3f}, {ce_loss:>3f})  [{current:>5d}/{size:>5d}]")
 
 
-if __name__ == '__main__':
+@click.command()
+@click.option('-e', '--experience', required=True)
+@click.option('-q', '--query', is_flag=True, help='query experience')
+@click.option('-b', '--batch-size', type=int, default=256)
+@click.option('-i', '--input-path', help='path to input parameter file')
+@click.option('-o', '--output-path')
+@click.option('-n', '--subset', default=1.0, help='number or fraction of examples to use')
+@click.option('--lr', default=1e-2, help='learning rate')
+@click.option('--interval', default=1, help='output interval')
+def main(experience, query, batch_size, input_path, output_path, subset, lr, interval):
     import sys
     sys.path.append('../nn/nine')
     from conv_4x64 import GoNet
+
+    if int(subset) == subset:
+        subset = int(subset)
+
+    if output_path and os.path.exists(output_path):
+        raise ValueError('output path exists')
+
+    dataset = ExperienceSubset(experience, subset)
+    dataloader = DataLoader(dataset, batch_size)
+    if query:
+        return
     
     grid_size = 9
     encoder_channels = 11
     model = GoNet(in_channels=encoder_channels, grid_size=grid_size)
-    model.load_state_dict(torch.load('../nn/nine/conv_4x64.pt'))
+    model.load_state_dict(torch.load(input_path))
     
-    dataset = ExperienceSubset('example', 6000)
-    dataloader = DataLoader(dataset, 256)
-
     optimizer = torch.optim.SGD(model.parameters(),
                                 # Paper starts with 1e-2
-                                lr=1e-2,
+                                lr=lr,
                                 momentum=0.9,
                                 weight_decay=1e-4)
 
-    train(dataloader, model, optimizer)
+    train(dataloader, model, optimizer, interval)
+
+    if output_path:
+        torch.save(model.state_dict(), output_path)
+
+
+if __name__ == '__main__':
+    main()

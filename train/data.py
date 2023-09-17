@@ -19,7 +19,7 @@ class ExperienceSubset(Subset):
     def __init__(self, directory, n):
         dataset = ExperienceSet(directory)
         print(f'loaded augmented experience data with {len(dataset)} moves')
-        if n < 1:
+        if n <= 1:
             # Treat as fraction
             n = int(len(dataset) * n)
         if n > len(dataset):
