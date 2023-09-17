@@ -1,7 +1,9 @@
+import os
 import time
 
 import torch
 from torch import nn
+import click
 
 device = 'cpu'
 
@@ -86,13 +88,23 @@ def count_parameters(model):
 #     print('delta:', toc-tic, (toc - tic) / n)
 
 
-with torch.no_grad():
-    grid_size = 9
-    encoder_channels = 11
-    model = GoNet(in_channels=encoder_channels, grid_size=grid_size)
-    model.eval()
+@click.command()
+@click.option('-o', '--output', default='conv_4x64.pt')
+@click.option('-f', '--force', is_flag=True, help='overwrite')
+def main(output, force):
+    if not force and (os.path.exists(output) or os.path.exists(output.replace('.pt', '.ts'))):
+        raise ValueError('output exists')
+    with torch.no_grad():
+        grid_size = 9
+        encoder_channels = 11
+        model = GoNet(in_channels=encoder_channels, grid_size=grid_size)
+        model.eval()
 
-    torch.save(model.state_dict(), "conv_4x64.pt")
-    X = torch.rand(1, encoder_channels, grid_size, grid_size, device=device)
-    traced_script_module = torch.jit.trace(model, X)
-    traced_script_module.save("conv_4x64_script.pt")
+        torch.save(model.state_dict(), output)
+        X = torch.rand(1, encoder_channels, grid_size, grid_size, device=device)
+        traced_script_module = torch.jit.trace(model, X)
+        traced_script_module.save(output.replace('.pt', '.ts'))
+
+
+if __name__ == '__main__':
+    main()
