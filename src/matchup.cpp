@@ -13,6 +13,41 @@
 #include "utils.h"
 #include "scoring.h"
 #include "simulation.h"
+#include "agent_naive.h"
+
+
+std::unique_ptr<Agent> load_zero_agent(const std::string network_path,
+                                       int board_size,
+                                       int num_rounds) {
+  c10::InferenceMode guard;
+  torch::jit::script::Module model;
+  try {
+    model = torch::jit::load(network_path);
+  }
+  catch (const c10::Error& e) {
+    std::cerr << "Error loading model: " << network_path << std::endl;
+    // Return emptpy pointer
+    return std::unique_ptr<Agent>();
+  }
+
+  std::cout << "Loaded: " << network_path << std::endl;
+
+  auto encoder = std::make_shared<SimpleEncoder>(board_size);
+  auto agent = std::make_unique<ZeroAgent>(model, encoder, num_rounds, true);
+  return agent;
+}
+
+
+std::unique_ptr<Agent> load_agent(const std::string identifier,
+                                       int board_size,
+                                       int num_rounds) {
+  if (identifier == "random") {
+    std::cout << "loading random agent" << std::endl;
+    return std::make_unique<FastRandomBot>();
+  }
+  else
+    return load_zero_agent(identifier, board_size, num_rounds);
+}
 
 
 int main(int argc, const char* argv[]) {
@@ -20,8 +55,8 @@ int main(int argc, const char* argv[]) {
   cxxopts::Options options("matchup", "Pair two agents against each other");
 
   options.add_options()
-    ("network1", "Path to pytorch script file", cxxopts::value<std::string>())
-    ("network2", "Path to pytorch script file", cxxopts::value<std::string>())
+    ("agent1", "Netowrk path or 'random'", cxxopts::value<std::string>())
+    ("agent2", "Netowrk path or 'random'", cxxopts::value<std::string>())
     ("r,rounds", "Number of rounds", cxxopts::value<int>()->default_value("800"))
     ("g,num-games", "Number of games", cxxopts::value<int>()->default_value("1"))
     ("b,board-size", "Board size", cxxopts::value<int>()->default_value("9"))
@@ -30,8 +65,8 @@ int main(int argc, const char* argv[]) {
     ("h,help", "Print usage")
     ;
 
-  options.parse_positional({"network1", "network2"});
-  options.positional_help("<network_file1> <network_file2>");
+  options.parse_positional({"agent1", "agent2"});
+  options.positional_help("<agent1> <agent2>");
 
   cxxopts::ParseResult args;
   try {
@@ -47,7 +82,7 @@ int main(int argc, const char* argv[]) {
     exit(0);
   }
 
-  if (! args.count("network1") || ! args.count("network2")) {
+  if (! args.count("agent1") || ! args.count("agent2")) {
     std::cout << options.help() << std::endl;
     exit(1);
   }
@@ -56,30 +91,20 @@ int main(int argc, const char* argv[]) {
   auto num_games = args["num-games"].as<int>();
   auto board_size = args["board-size"].as<int>();
   auto verbosity = args["verbosity"].as<int>();
-    
+
   if (args.count("num-threads")) {
     std::cout << "setting " << args["num-threads"].as<int>() << " pytorch threads" << std::endl;
     at::set_num_threads(args["num-threads"].as<int>());
   }
 
-  c10::InferenceMode guard;
-  torch::jit::script::Module model1;
-  torch::jit::script::Module model2;
-  try {
-    model1 = torch::jit::load(args["network1"].as<std::string>());
-    model2 = torch::jit::load(args["network2"].as<std::string>());
-  }
-  catch (const c10::Error& e) {
-    std::cerr << "error loading the model\n";
+  auto agent1 = load_agent(args["agent1"].as<std::string>(),
+                           board_size, num_rounds);
+  auto agent2 = load_agent(args["agent2"].as<std::string>(),
+                           board_size, num_rounds);
+  if (! agent1 || ! agent2)
     return -1;
-  }
 
-  std::cout << "Models loaded\n";
 
-  auto encoder = std::make_shared<SimpleEncoder>(board_size);
-
-  auto agent1 = std::make_unique<ZeroAgent>(model1, encoder, num_rounds, true);
-  auto agent2 = std::make_unique<ZeroAgent>(model2, encoder, num_rounds, true);
   Agent* black_agent;
   Agent* white_agent;
 
