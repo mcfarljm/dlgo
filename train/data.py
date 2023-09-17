@@ -18,8 +18,13 @@ class ExperienceSubset(Subset):
     """Random subset of items from all experience files in a directory."""
     def __init__(self, directory, n):
         dataset = ExperienceSet(directory)
+        print(f'loaded augmented experience data with {len(dataset)} moves')
+        if n < 1:
+            # Treat as fraction
+            n = int(len(dataset) * n)
         if n > len(dataset):
             raise ValueError
+        print(f'using subset of {n} moves')
         indices = np.random.choice(len(dataset), n, replace=False)
         super().__init__(dataset, indices)
 
