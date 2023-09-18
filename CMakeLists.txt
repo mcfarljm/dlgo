@@ -68,7 +68,7 @@ add_executable(human_v_bot src/human_v_bot.cpp)
 target_link_libraries(human_v_bot PRIVATE dlgo)
 
 add_executable(dlgobot src/gtp/gtp_main.cpp)
-target_link_libraries(dlgobot PRIVATE dlgo)
+target_link_libraries(dlgobot PRIVATE dlgo cxxopts)
 
 add_executable(zero_sim src/zero_sim.cpp)
 target_link_libraries(zero_sim PRIVATE dlgo cxxopts)
