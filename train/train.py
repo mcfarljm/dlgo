@@ -19,6 +19,7 @@ def cross_entropy_loss_fn(policies, visit_counts):
 def train(dataloader, model, optimizer, output_interval):
     mse_loss_fn = torch.nn.MSELoss()
     size = len(dataloader.dataset)
+    num_batches = len(dataloader)
     model.train()
     for batch_num, (states, rewards, visit_counts) in enumerate(dataloader):
 
@@ -38,7 +39,7 @@ def train(dataloader, model, optimizer, output_interval):
         if batch_num % output_interval == 0:
             loss, current = loss.item(), (batch_num + 1) * len(states)
             mse_loss, ce_loss = mse_loss.item(), cross_entropy_loss.item()
-            print(f"loss: {loss:>7f} ({mse_loss:>3f}, {ce_loss:>3f})  [{current:>5d}/{size:>5d}]")
+            print(f"loss: {loss:>7f} ({mse_loss:>3f}, {ce_loss:>3f})  [{current:>5d}/{size:>5d}] [{batch_num + 1}/{num_batches}]")
 
 
 @click.command()
@@ -50,15 +51,18 @@ def train(dataloader, model, optimizer, output_interval):
 @click.option('-n', '--subset', default=1.0, help='number or fraction of examples to use')
 @click.option('--lr', default=1e-2, help='learning rate')
 @click.option('--interval', default=1, help='output interval')
-def main(experience, query, batch_size, input_path, output_path, subset, lr, interval):
+@click.option('-f', '--force', is_flag=True, help='overwrite existing output files')
+def main(experience, query, batch_size, input_path, output_path, subset, lr, interval, force):
+    THIS_DIR = os.path.abspath(os.path.dirname(__file__))
+
     import sys
-    sys.path.append('../nn/nine')
+    sys.path.append(os.path.join(THIS_DIR, '../nn/nine'))
     from conv_4x64 import GoNet
 
     if int(subset) == subset:
         subset = int(subset)
 
-    if output_path and os.path.exists(output_path):
+    if output_path and (not force) and os.path.exists(output_path):
         raise ValueError('output path exists')
 
     dataset = ExperienceSubset(experience, subset)
@@ -81,6 +85,12 @@ def main(experience, query, batch_size, input_path, output_path, subset, lr, int
 
     if output_path:
         torch.save(model.state_dict(), output_path)
+
+        # Torchscript
+        model.eval()
+        X = torch.rand(1, encoder_channels, grid_size, grid_size)
+        traced_script_module = torch.jit.trace(model, X)
+        traced_script_module.save(output_path.replace('.pt', '.ts'))
 
 
 if __name__ == '__main__':
