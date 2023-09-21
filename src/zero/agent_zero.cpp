@@ -20,9 +20,10 @@ ZeroNode::ZeroNode(ConstGameStatePtr game_state, float value,
 
   assert((! branches.empty()) || terminal);
 
-  if (terminal)
+  if (terminal) {
     // Override the model's value estimate with actual result
-    value = (game_state->next_player == game_state->winner().value()) ? 1.0 : -1.0;
+    ZeroNode::value = (game_state->next_player == game_state->winner().value()) ? 1.0 : -1.0;
+  }
 }
 
 
@@ -109,6 +110,9 @@ Move ZeroAgent::select_move(const GameState& game_state) {
                                        return root->visit_count(p1.first) < root->visit_count(p2.first);
                                      });
 
+      // for (const auto& [m, b] : root->branches)
+      //   std::cout << "visits: " << m << " " << b.visit_count << std::endl;
+      // std::cout << "E[V] = " << max_it->second.total_value / max_it->second.visit_count << ", visits = " << max_it->second.visit_count << std::endl;
       return max_it->first;
   }
   else {
