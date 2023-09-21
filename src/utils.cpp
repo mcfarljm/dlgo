@@ -18,7 +18,7 @@ void print_move(Player player, Move move) {
     move_str = "resigns";
   else
     move_str = COLS[move.point.value().col - 1] + std::to_string(move.point.value().row);
-  std::cout << int(player) << " " << move_str << std::endl;
+  std::cout << player << " " << move_str << std::endl;
 }
 
 

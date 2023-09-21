@@ -30,7 +30,7 @@ std::pair<Player, int> simulate_game(int board_size,
   auto winner = game_result.winner();
   if (verbosity >= 1) {
     std::cout << move_count << " moves\n";
-    std::cout << "Winner: " << int(winner) << std::endl;
+    std::cout << "Winner: " << winner << std::endl;
   }
   return std::make_pair(winner, move_count);
 }

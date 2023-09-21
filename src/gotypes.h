@@ -6,6 +6,8 @@
 
 enum class Player { black, white };
 
+std::ostream& operator<<(std::ostream& os, Player player);
+
 Player other_player(Player player);
 
 struct Point {
