@@ -28,6 +28,7 @@ namespace gtp {
     std::istream& input = std::cin;
     std::ostream& output = std::cout;
     GameStatePtr game_state = GameState::new_game(19);
+    float komi = 7.5;
 
     std::unordered_map<std::string, Response (GTPFrontend::*)(const ArgList&)> handlers = {
       {"name", &GTPFrontend::handle_name},
@@ -40,7 +41,7 @@ namespace gtp {
       {"play", &GTPFrontend::handle_play},
       {"protocol_version", &GTPFrontend::handle_protocol_version},
       {"genmove", &GTPFrontend::handle_genmove},
-      {"komi", &GTPFrontend::ignore},
+      {"komi", &GTPFrontend::handle_komi},
       {"time_settings", &GTPFrontend::ignore},
       {"time_left", &GTPFrontend::ignore},
       {"quit", &GTPFrontend::handle_quit},
@@ -87,13 +88,13 @@ namespace gtp {
     }
 
     Response handle_clear_board(const ArgList& args) {
-      game_state = GameState::new_game(boardsize);
+      game_state = GameState::new_game(boardsize, komi);
       return Response::success();
     }
 
     Response handle_boardsize(const ArgList& args) {
       boardsize = std::stoi(args[0]);
-      game_state = GameState::new_game(boardsize);
+      game_state = GameState::new_game(boardsize, komi);
       return Response::success();
     }
 
@@ -147,6 +148,12 @@ namespace gtp {
         return Response::success("resign");
       else
         return Response::success(coords_to_gtp_position(move));
+    }
+
+    Response handle_komi(const ArgList& args) {
+      komi = std::stof(args[0]);
+      std::cerr << "setting komi: " << komi << std::endl;
+      return Response::success();
     }
 
     Response handle_protocol_version(const ArgList& args) {
