@@ -26,7 +26,7 @@ std::unique_ptr<Agent> load_zero_agent(const std::string network_path,
     return std::unique_ptr<Agent>();
   }
 
-  std::cout << "Loaded: " << network_path << std::endl;
+  std::cerr << "Loaded: " << network_path << std::endl;
 
   auto encoder = std::make_shared<SimpleEncoder>(board_size);
   auto agent = std::make_unique<ZeroAgent>(model, encoder, num_rounds, true);
@@ -77,7 +77,7 @@ int main(int argc, const char* argv[]) {
 
   auto num_rounds = args["rounds"].as<int>();
   
-  std::cout << "Starting DLGO...\n";
+  std::cerr << "Starting DLGO...\n";
 
   auto agent = load_agent(args["agent"].as<std::string>(),
                            9, num_rounds);

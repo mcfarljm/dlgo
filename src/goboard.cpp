@@ -52,7 +52,7 @@ std::map<std::pair<int,int>,
 
 void Board::init_neighbor_table(std::pair<int,int> dim) {
   auto [rows, cols] = dim;
-  std::cout << "init neighbor table: " << rows << " " << cols << std::endl;
+  std::cerr << "init neighbor table: " << rows << " " << cols << std::endl;
   std::unordered_map<Point, std::vector<Point>, PointHash> new_table;
   for (int r=1; r <= rows; ++r) {
     for (int c=1; c <= cols; ++c) {
