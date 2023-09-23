@@ -186,7 +186,7 @@ GameStatePtr GameState::apply_move(Move m) const {
   } else {
     next_board.reset(new Board(*board)); // Shallow copy
   }
-  return std::make_shared<GameState>(next_board, other_player(next_player), shared_from_this(), m);
+  return std::make_shared<GameState>(next_board, other_player(next_player), shared_from_this(), m, komi);
 }
 
 

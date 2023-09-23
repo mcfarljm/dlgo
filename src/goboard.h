@@ -173,12 +173,13 @@ private:
   std::optional<Move> last_move;
   // Todo: review whether this should be a set?
   std::vector<std::pair<Player, uint64_t>> previous_hashes;
+  float komi = 7.5;
 
 public:
   Player next_player;
   BoardPtr board;
-  GameState(BoardPtr board, Player next_player, ConstGameStatePtr previous_state, std::optional<Move> last_move)
-    : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move} {
+  GameState(BoardPtr board, Player next_player, ConstGameStatePtr previous_state, std::optional<Move> last_move, float komi)
+    : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move}, komi{komi} {
     if (previous_state) {
       previous_hashes = previous_state->previous_hashes;
       previous_hashes.push_back({previous_state->next_player, previous_state->board->get_hash()});
@@ -187,9 +188,9 @@ public:
 
   GameStatePtr apply_move(Move m) const;
 
-  static GameStatePtr new_game(int board_size) {
+  static GameStatePtr new_game(int board_size, float komi=7.5) {
     auto board = std::make_shared<Board>(board_size, board_size);
-    return std::make_shared<GameState>(board, Player::black, GameStatePtr(), std::nullopt);
+    return std::make_shared<GameState>(board, Player::black, GameStatePtr(), std::nullopt, komi);
   }
 
   bool is_over() const;
