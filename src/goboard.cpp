@@ -207,7 +207,7 @@ std::optional<Player> GameState::winner() const {
     return std::nullopt;
   if (last_move && last_move.value().is_resign)
     return next_player;
-  auto game_result = GameResult(board);
+  auto game_result = GameResult(board, komi);
   return game_result.winner();
 }
 
