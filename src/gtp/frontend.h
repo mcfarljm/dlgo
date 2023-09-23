@@ -13,6 +13,7 @@
 #include "response.h"
 #include "gtp_board.h"
 #include "../agent_base.h"
+#include "../scoring.h"
 
 
 namespace gtp {
@@ -42,6 +43,7 @@ namespace gtp {
       {"protocol_version", &GTPFrontend::handle_protocol_version},
       {"genmove", &GTPFrontend::handle_genmove},
       {"komi", &GTPFrontend::handle_komi},
+      {"final_score", &GTPFrontend::handle_final_score},
       {"time_settings", &GTPFrontend::ignore},
       {"time_left", &GTPFrontend::ignore},
       {"quit", &GTPFrontend::handle_quit},
@@ -154,6 +156,15 @@ namespace gtp {
       komi = std::stof(args[0]);
       std::cerr << "setting komi: " << komi << std::endl;
       return Response::success();
+    }
+
+    Response handle_final_score(const ArgList& args) {
+      auto result = GameResult(game_state->board, komi);
+      std::stringstream ss;
+      ss << (result.winner() == Player::black ? "B" : "W");
+      ss << "+";
+      ss << result.winning_margin();
+      return Response::success(ss.str());
     }
 
     Response handle_protocol_version(const ArgList& args) {

@@ -57,7 +57,7 @@ struct GameResult {
 
   float winning_margin() {
     float white_adjusted = white + komi;
-    return abs(black - white_adjusted);
+    return std::abs(black - white_adjusted);
   }
 
 };
