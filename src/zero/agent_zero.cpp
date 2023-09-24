@@ -45,8 +45,7 @@ float ZeroNode::expected_value(Move m) {
 
 
 Move ZeroAgent::select_move(const GameState& game_state) {
-  // std::cout << "In select move\n";
-  ++move_count;
+  // std::cerr << "In select move, prior move count: " << game_state.num_moves << std::endl;
   auto root = create_node(std::make_shared<const GameState>(game_state));
 
   for (auto round_number=0; round_number < num_rounds; ++round_number) {
@@ -103,7 +102,7 @@ Move ZeroAgent::select_move(const GameState& game_state) {
     collector->record_decision(root_state_tensor, visit_counts);
   }
 
-  if (greedy || move_count > GREEDY_MOVE_THRESHOLD) {
+  if (greedy || game_state.num_moves > GREEDY_MOVE_THRESHOLD) {
       // Select the move with the highest visit count
       auto max_it = std::max_element(root->branches.begin(), root->branches.end(),
                                      [&root] (const auto& p1, const auto& p2) {

@@ -74,9 +74,6 @@ class ZeroAgent : public Agent {
 
   std::shared_ptr<ExperienceCollector> collector;
 
-  // Track number of moves, which can be used for adjusting move selection
-  // policy.
-  int move_count = 0;
   // If True, always select moves that maximize visit count.  Otherwise, initial
   // moves are selected in proportion to visit count.
   bool greedy;

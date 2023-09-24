@@ -178,11 +178,14 @@ private:
 public:
   Player next_player;
   BoardPtr board;
+  int num_moves = 0;
+
   GameState(BoardPtr board, Player next_player, ConstGameStatePtr previous_state, std::optional<Move> last_move, float komi)
     : board{std::move(board)}, next_player{next_player}, previous_state{previous_state}, last_move{last_move}, komi{komi} {
     if (previous_state) {
       previous_hashes = previous_state->previous_hashes;
       previous_hashes.push_back({previous_state->next_player, previous_state->board->get_hash()});
+      num_moves = previous_state->num_moves + 1;
     }
   }
 
