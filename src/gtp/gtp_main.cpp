@@ -38,11 +38,11 @@ std::unique_ptr<Agent> load_agent(const std::string identifier,
                                        int board_size,
                                        int num_rounds) {
   if (identifier == "random") {
-    std::cout << "loading random agent" << std::endl;
+    std::cerr << "loading random agent" << std::endl;
     return std::make_unique<FastRandomBot>();
   }
   else if (identifier == "mcts") {
-    std::cout << "loading mcts agent with " << num_rounds << " rounds" << std::endl;
+    std::cerr << "loading mcts agent with " << num_rounds << " rounds" << std::endl;
     return std::make_unique<MCTSAgent>(num_rounds, 1.5);
   }
   // auto frontend = gtp::GTPFrontend(std::make_unique<AlphaBetaAgent>(2, &capture_diff));
