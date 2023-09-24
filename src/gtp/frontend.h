@@ -60,6 +60,9 @@ namespace gtp {
       std::string line;
       while (! stopped) {
         getline(input, line);
+        if (line.find_first_not_of(" \n") == std::string::npos)
+          // Skip blank lines
+          continue;
         auto command = parse_command(line);
         auto response = process(command);
         output << response.serialize(command);
