@@ -122,9 +122,13 @@ namespace gtp {
     Response handle_showboard(const ArgList& args) {
       /* output << *game_state->board; */
       std::stringstream ss;
-      ss << "Board:\n";
+      ss << "\n";
       ss << *game_state->board;
-      return Response::success(ss.str());
+      auto str = ss.str();
+      // Remove the newline at the end.  Two more will get added automatically,
+      // and too many newlines may confuse the GTP server.
+      if (!str.empty()) str.pop_back();
+      return Response::success(str);
     }
 
     Response handle_play(const ArgList& args) {
