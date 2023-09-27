@@ -373,7 +373,7 @@ TEST_CASE( "Benchmark zero move", "[!benchmark][zeromove]" ) {
   torch::jit::script::Module model;
   try {
     // Deserialize the ScriptModule from a file using torch::jit::load().
-    model = torch::jit::load("../nn/nine/conv_4x64_script.pt");
+    model = torch::jit::load("../nn/nine/conv_4x64.ts");
   }
   catch (const c10::Error& e) {
     std::cerr << "error loading the model\n";
