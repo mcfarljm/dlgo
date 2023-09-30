@@ -130,7 +130,8 @@ Move ZeroAgent::select_move(const GameState& game_state) {
     collector->record_decision(root_state_tensor, visit_counts);
   }
 
-  if (greedy || game_state.num_moves > GREEDY_MOVE_THRESHOLD) {
+  int greedy_move_threshold = REFERENCE_GREEDY_MOVE_THRESHOLD * game_state.board->num_rows / 19;
+  if (greedy || game_state.num_moves > greedy_move_threshold) {
       // Select the move with the highest visit count
       auto max_it = std::max_element(root->branches.begin(), root->branches.end(),
                                      [&root] (const auto& p1, const auto& p2) {

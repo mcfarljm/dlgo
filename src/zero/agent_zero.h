@@ -83,7 +83,9 @@ class ZeroAgent : public Agent {
   // If True, always select moves that maximize visit count.  Otherwise, initial
   // moves are selected in proportion to visit count.
   bool greedy;
-  constexpr static int GREEDY_MOVE_THRESHOLD = 30;
+  // On a full board and with greedy=false, number of moves to play with
+  // temperature randomization.
+  constexpr static int REFERENCE_GREEDY_MOVE_THRESHOLD = 30;
 
 public:
   ZeroAgent(torch::jit::script::Module model,
