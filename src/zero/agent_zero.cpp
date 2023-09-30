@@ -21,15 +21,17 @@ ZeroNode::ZeroNode(ConstGameStatePtr game_state, float value,
 
   assert((! branches.empty()) || terminal);
 
-  if (add_noise) {
+  if (add_noise && ! branches.empty()) {
     // std::cout << "Orig prior: ";
     // for (const auto &[move, p] : priors)
     //   std::cout << move << " " << p << ", ";
     // std::cout << std::endl;
 
     // Sample noise on legal moves:
-    auto dirichlet_dist = DirichletDistribution(branches.size(),
-                                                DIRICHLET_CONCENTRATION);
+    // Adjust concentration based on number of legal moves, following Katago
+    // paper.
+    double alpha = DIRICHLET_CONCENTRATION * 19.0 * 19.0 / branches.size();
+    auto dirichlet_dist = DirichletDistribution(branches.size(), alpha);
     std::vector<double> noise = dirichlet_dist.sample();
     // std::cout << "Noise: " << noise << std::endl;
 
