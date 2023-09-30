@@ -20,6 +20,11 @@ public:
 };
 
 class ZeroNode {
+
+  // Concentration parameter for dirichlet noise:
+  constexpr static double DIRICHLET_CONCENTRATION = 0.03;
+  constexpr static float DIRICHLET_WEIGHT = 0.25;
+
 public:
   ConstGameStatePtr game_state;
   std::weak_ptr<ZeroNode> parent;
@@ -32,8 +37,9 @@ public:
 
   ZeroNode(ConstGameStatePtr game_state, float value,
            std::unordered_map<Move, float, MoveHash> priors,
-           std::weak_ptr<ZeroNode> parent = std::weak_ptr<ZeroNode>(),
-           std::optional<Move> last_move = std::nullopt);
+           std::weak_ptr<ZeroNode> parent,
+           std::optional<Move> last_move,
+           bool add_noise);
 
   void add_child(Move move, std::shared_ptr<ZeroNode> child) {
     children.emplace(move, child);
@@ -78,10 +84,6 @@ class ZeroAgent : public Agent {
   // moves are selected in proportion to visit count.
   bool greedy;
   constexpr static int GREEDY_MOVE_THRESHOLD = 30;
-
-  // Concentration parameter for dirichlet noise:
-  constexpr static double DIRICHLET_CONCENTRATION = 0.03;
-  constexpr static float DIRICHLET_WEIGHT = 0.25;
 
 public:
   ZeroAgent(torch::jit::script::Module model,

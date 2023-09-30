@@ -9,7 +9,8 @@
 ZeroNode::ZeroNode(ConstGameStatePtr game_state, float value,
                    std::unordered_map<Move, float, MoveHash> priors,
                    std::weak_ptr<ZeroNode> parent,
-                   std::optional<Move> last_move) :
+                   std::optional<Move> last_move,
+                   bool add_noise) :
   game_state(game_state), value(value), parent(parent), last_move(last_move),
   terminal(game_state->is_over()) {
 
@@ -19,6 +20,31 @@ ZeroNode::ZeroNode(ConstGameStatePtr game_state, float value,
   }
 
   assert((! branches.empty()) || terminal);
+
+  if (add_noise) {
+    // std::cout << "Orig prior: ";
+    // for (const auto &[move, p] : priors)
+    //   std::cout << move << " " << p << ", ";
+    // std::cout << std::endl;
+
+    // Sample noise on legal moves:
+    auto dirichlet_dist = DirichletDistribution(branches.size(),
+                                                DIRICHLET_CONCENTRATION);
+    std::vector<double> noise = dirichlet_dist.sample();
+    // std::cout << "Noise: " << noise << std::endl;
+
+    size_t idx = 0;
+    for (auto &[move, prior]: priors) {
+      prior = (1.0 - DIRICHLET_WEIGHT) * prior +
+        DIRICHLET_WEIGHT * noise[idx];
+      ++idx;
+    }
+
+    // std::cout << "Noised prior: ";
+    // for (const auto &[move, p] : priors)
+    //   std::cout << move << " " << p << ", ";
+    // std::cout << std::endl;
+  }
 
   if (terminal) {
     // Override the model's value estimate with actual result
@@ -158,35 +184,16 @@ std::shared_ptr<ZeroNode> ZeroAgent::create_node(ConstGameStatePtr game_state,
   // std::cout << "priors size: " << at::numel(priors) << std::endl;
   auto value = values.item().toFloat();
 
-  // Add dirichlet noise for the root noise
-  if (! parent.lock()) {
-    // std::cout << "Ading dirichlet noise\n";
-    // std::cout << "initial prior sum: " << priors.sum() << std::endl;
-    auto dirichlet_dist = DirichletDistribution(at::numel(priors), DIRICHLET_CONCENTRATION);
-    std::vector<double> noise = dirichlet_dist.sample();
-    for (auto& x : noise)
-      x *= DIRICHLET_WEIGHT;
-
-    // Todo: this is a little precarious because we obtain the noise as a vector
-    // of doubles and need to convert to tensor of float32.
-    auto options = torch::TensorOptions().dtype(torch::kFloat64);
-    auto noise_tensor = torch::from_blob(noise.data(),
-                                         {static_cast<int64_t>(noise.size())},
-                                         options).to(torch::kFloat32);
-
-    priors.multiply_(1.0 - DIRICHLET_WEIGHT);
-    priors.add_(noise_tensor);
-    // std::cout << "new prior sum: " << priors.sum() << std::endl;
-
-    assert( priors.sum().item<float>() < 1.0001 && priors.sum().item<float>() > 0.99999);
-  }
-
   std::unordered_map<Move, float, MoveHash> move_priors;
   for (auto i=0; i<at::numel(priors); ++i) {
     move_priors.emplace(encoder->decode_move_index(i), priors.index({i}).item().toFloat());
   }
 
-  auto new_node = std::make_shared<ZeroNode>(game_state, value, std::move(move_priors), parent, move);
+  auto new_node = std::make_shared<ZeroNode>(game_state, value,
+                                             std::move(move_priors),
+                                             parent,
+                                             move,
+                                             ! parent.lock());
   auto parent_shared = parent.lock();
   if (parent_shared) {
     assert(move);
