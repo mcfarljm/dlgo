@@ -92,6 +92,8 @@ def count_parameters(model):
 @click.option('-o', '--output', default='conv_4x64.pt')
 @click.option('-f', '--force', is_flag=True, help='overwrite')
 def main(output, force):
+    if not output.endswith('.pt'):
+        output += '.pt'
     if not force and (os.path.exists(output) or os.path.exists(output.replace('.pt', '.ts'))):
         raise ValueError('output exists')
     with torch.no_grad():
