@@ -58,13 +58,13 @@ public:
 
   void record_visit(Move m, float val);
 
-  float expected_value(Move m);
+  float expected_value(Move m) const;
 
-  float prior(Move m) {
+  float prior(Move m) const {
     return branches.find(m)->second.prior;
   }
 
-  int visit_count(Move m) {
+  int visit_count(Move m) const {
     auto it = branches.find(m);
     if (it != branches.end())
       return it->second.visit_count;
@@ -105,7 +105,7 @@ private:
   std::shared_ptr<ZeroNode> create_node(ConstGameStatePtr game_state,
                                         std::optional<Move> move = std::nullopt,
                                         std::weak_ptr<ZeroNode> parent = std::weak_ptr<ZeroNode>());
-  Move select_branch(std::shared_ptr<ZeroNode> node);
+  Move select_branch(const ZeroNode& node) const;
 };
 
 #endif // AGENT_ZERO_H

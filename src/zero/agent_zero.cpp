@@ -64,7 +64,7 @@ void ZeroNode::record_visit(Move move, float value) {
 }
 
 
-float ZeroNode::expected_value(Move m) {
+float ZeroNode::expected_value(Move m) const {
   auto branch = branches.find(m)->second;
   if (branch.visit_count == 0)
     return 0.0;
@@ -79,7 +79,7 @@ Move ZeroAgent::select_move(const GameState& game_state) {
   for (auto round_number=0; round_number < num_rounds; ++round_number) {
     // std::cout << "Round: " << round_number << std::endl;
     auto node = root;
-    auto next_move = select_branch(node);
+    auto next_move = select_branch(*node);
     // std::cout << "Selected root move: " << next_move << std::endl;
     // for (auto it = node->children.find(next_move); it != node->children.end();) {
     for (std::unordered_map<Move, std::shared_ptr<ZeroNode>, MoveHash>::const_iterator it;
@@ -87,7 +87,7 @@ Move ZeroAgent::select_move(const GameState& game_state) {
       node = it->second;
       if (node->terminal)
         break;
-      next_move = select_branch(node);
+      next_move = select_branch(*node);
     }
 
     float value;
@@ -207,17 +207,17 @@ std::shared_ptr<ZeroNode> ZeroAgent::create_node(ConstGameStatePtr game_state,
 
 
 
-Move ZeroAgent::select_branch(std::shared_ptr<ZeroNode> node) {
+Move ZeroAgent::select_branch(const ZeroNode& node) const {
   auto score_branch = [&] (Move move) {
-    auto q = node->expected_value(move);
-    auto p = node->prior(move);
-    auto n = node->visit_count(move);
-    return q + c_uct * p * sqrt(node->total_visit_count) / (n + 1);
+    auto q = node.expected_value(move);
+    auto p = node.prior(move);
+    auto n = node.visit_count(move);
+    return q + c_uct * p * sqrt(node.total_visit_count) / (n + 1);
   };
-  auto max_it = std::max_element(node->branches.begin(), node->branches.end(),
+  auto max_it = std::max_element(node.branches.begin(), node.branches.end(),
                                  [score_branch] (const auto& p1, const auto& p2) {
                                    return score_branch(p1.first) < score_branch(p2.first);
                                  });
-  assert(max_it != node->branches.end());
+  assert(max_it != node.branches.end());
   return max_it->first;
 }
