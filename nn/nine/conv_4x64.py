@@ -64,6 +64,9 @@ def count_parameters(model):
 
 
 # with torch.no_grad():
+#     def chunker(seq, size):
+#         return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+
 #     print('default threads:', torch.get_num_threads())
 #     # torch.set_num_threads(1)
 #     grid_size = 9
@@ -71,17 +74,15 @@ def count_parameters(model):
 #     model = GoNet(in_channels=encoder_channels, grid_size=grid_size)
 #     print('num params:', count_parameters(model))
 #     model.eval()
-#     n = 1000
+#     n = 5000
+#     batch_size = 1
 #     X = torch.rand(n, encoder_channels, grid_size, grid_size, device=device)
 #     print('shape:', X.shape)
 #     tic = time.perf_counter()
 
-#     # Individual calls:
-#     for i in range(n):
-#         (policy, value) = model(X[i:i+1,:,:,:])
-
-#     # As a batch:
-#     # (policy, value) = model(X)
+#     # Chunked:
+#     for x in chunker(X, batch_size):
+#         (policy, value) = model(x)
 
 #     toc = time.perf_counter()
 #     print('shape:', policy.shape, value.shape)
