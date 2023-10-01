@@ -26,6 +26,7 @@ FetchContent_MakeAvailable(cxxopts)
 
 
 # To use:
+# - only works with static linking
 # - compile in new dir: cmake .. -DCMAKE_BUILD_TYPE=PROFILE
 # - run executable as normal
 # - run gprof -P <exename> > prof.out
