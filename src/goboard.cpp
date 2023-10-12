@@ -7,6 +7,10 @@
 static constexpr char COLS[] = "ABCDEFGHJKLMNOPQRST";
 
 
+// Initialize random hash keys:
+const Hasher hasher {};
+
+
 static std::string stone_to_char(std::optional<Player> stone) {
   if (! stone)
     return " . ";

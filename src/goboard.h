@@ -25,9 +25,6 @@ class GameState;
 using GameStatePtr = std::shared_ptr<GameState>;
 using ConstGameStatePtr = std::shared_ptr<const GameState>;
 
-// Initialize random hash keys:
-static const Hasher hasher {};
-
 class Move {
  public:
 

@@ -14,9 +14,7 @@ class Hasher {
   uint64_t point_keys[2][HASH_MAX_BOARD][HASH_MAX_BOARD];
 
   Hasher() {
-    /* Have noticed that constructor seems to be called multiple times
-    unexpectedly.  Not sure why, but seems to be OK. */
-    /* std::cout << "Setting hash\n"; */
+    // std::cout << "Setting hash\n";
 
     /* Note: Tried using a globally defined RNG but the executables hung;
     probably because of initialization order.  Could be reviewed, but for now
